@@ -1,0 +1,95 @@
+.my-problems-page {
+  padding: 32px;
+}
+
+.my-problems-header {
+  margin-bottom: 25px;
+}
+
+.my-problems-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #111827;
+}
+
+.my-problems-header p {
+  margin-top: 7px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.problem-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.problem-search,
+.status-filter {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+  padding: 0 13px;
+}
+
+.problem-search {
+  flex: 1;
+}
+
+.problem-search input,
+.status-filter select {
+  border: none;
+  outline: none;
+  padding: 12px 0;
+  font-size: 14px;
+  background: transparent;
+}
+
+.problem-search input {
+  width: 100%;
+}
+
+.problem-filters svg {
+  color: #6b7280;
+}
+
+.problems-count {
+  margin-bottom: 18px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.all-problems-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.no-problems {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 15px;
+}
+
+.no-problems h3 {
+  margin-bottom: 5px;
+}
+
+.no-problems p {
+  color: #6b7280;
+}
+
+@media (max-width: 800px) {
+  .problem-filters {
+    flex-direction: column;
+  }
+
+  .all-problems-grid {
+    grid-template-columns: 1fr;
+  }
+}
