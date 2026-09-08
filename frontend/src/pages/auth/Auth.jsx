@@ -46,6 +46,72 @@ const roles = [
   },
 ];
 
+const roleStatistics = {
+  citizen: {
+    title: "Citizen Impact",
+    subtitle: "Empowering communities to drive change",
+    stats: [
+      { label: "Students Logged In", value: "1,245" },
+      { label: "Problems Posted", value: "3,872" },
+      { label: "Problems Solved", value: "2,156" },
+    ],
+    features: [
+      "Report community issues instantly",
+      "Track problem resolution progress",
+      "Connect with local universities",
+    ],
+  },
+  university: {
+    title: "University Innovation",
+    subtitle: "Transforming education into real-world impact",
+    stats: [
+      { label: "Total Universities", value: "47" },
+      { label: "Active Research Projects", value: "234" },
+      { label: "Industry Partnerships", value: "89" },
+    ],
+    topUniversities: [
+      { name: "IIT Dhanbad", problemsSolved: 342 },
+      { name: "BIT Mesra", problemsSolved: 287 },
+      { name: "NIT Jamshedpur", problemsSolved: 245 },
+      { name: "Ranchi University", problemsSolved: 198 },
+      { name: "Bokaro Steel City", problemsSolved: 156 },
+    ],
+    features: [
+      "Access real-world challenges",
+      "Showcase student innovations",
+      "Build industry partnerships",
+    ],
+  },
+  industry: {
+    title: "Industry Collaboration",
+    subtitle: "Bridging the gap between academia and industry",
+    stats: [
+      { label: "Industries Collaborated", value: "156" },
+      { label: "Projects Funded", value: "89" },
+      { label: "Mentorship Sessions", value: "342" },
+    ],
+    features: [
+      "Discover innovative solutions",
+      "Mentor upcoming talent",
+      "Invest in promising projects",
+    ],
+  },
+  government: {
+    title: "Government Oversight",
+    subtitle: "Monitoring progress and ensuring accountability",
+    stats: [
+      { label: "Problems Solved", value: "2,156" },
+      { label: "Pending Problems", value: "1,716" },
+      { label: "Projects Under Development", value: "423" },
+    ],
+    features: [
+      "Track regional development",
+      "Monitor social impact metrics",
+      "Coordinate with stakeholders",
+    ],
+  },
+};
+
 function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -102,37 +168,41 @@ function Auth() {
           </Link>
 
 
-          <div className="brand-message">
+          {role && roleStatistics[role] ? (
+            <DynamicBrandContent role={role} />
+          ) : (
+            <div className="brand-message">
 
-            <span className="brand-tag">
-              <ShieldCheck size={14} />
-              SOCIETAL INNOVATION PLATFORM
-            </span>
+              <span className="brand-tag">
+                <ShieldCheck size={12} />
+                SOCIETAL INNOVATION PLATFORM
+              </span>
 
-            <h1>
-              From local
-              <span> problems</span>
-              <br />
-              to real solutions.
-            </h1>
+              <h1>
+                From local
+                <span> problems</span>
+                <br />
+                to real solutions.
+              </h1>
 
-            <p>
-              Connecting citizens, universities, industry and
-              government to build a smarter and more innovative
-              Jharkhand.
-            </p>
+              <p>
+                Connecting citizens, universities, industry and
+                government to build a smarter and more innovative
+                Jharkhand.
+              </p>
 
-            <div className="brand-features">
+              <div className="brand-features">
 
-              <Feature text="Report and track community challenges" />
+                <Feature text="Report and track community challenges" />
 
-              <Feature text="Connect problems with universities" />
+                <Feature text="Connect problems with universities" />
 
-              <Feature text="Enable industry collaboration" />
+                <Feature text="Enable industry collaboration" />
+
+              </div>
 
             </div>
-
-          </div>
+          )}
 
         </div>
 
@@ -175,6 +245,94 @@ function Auth() {
         </div>
 
       </section>
+
+    </div>
+  );
+}
+
+
+/* =====================================================
+   DYNAMIC BRAND CONTENT
+===================================================== */
+
+function DynamicBrandContent({ role }) {
+  const stats = roleStatistics[role];
+
+  return (
+    <div className="brand-message dynamic-content">
+
+      <span className="brand-tag">
+        <ShieldCheck size={12} />
+        SOCIETAL INNOVATION PLATFORM
+      </span>
+
+      <h1>
+        {stats.title}
+      </h1>
+
+      <p>
+        {stats.subtitle}
+      </p>
+
+      <div className="role-statistics">
+
+        {stats.stats.map((stat, index) => (
+          <div key={index} className="stat-item">
+
+            <div className="stat-value">
+              {stat.value}
+            </div>
+
+            <div className="stat-label">
+              {stat.label}
+            </div>
+
+          </div>
+        ))}
+
+      </div>
+
+      {role === "university" && stats.topUniversities && (
+        <div className="top-universities">
+
+          <h3>Top Universities by Problems Solved</h3>
+
+          <div className="universities-list">
+
+            {stats.topUniversities.map((university, index) => (
+              <div key={index} className="university-item">
+
+                <div className="university-rank">
+                  #{index + 1}
+                </div>
+
+                <div className="university-info">
+
+                  <div className="university-name">
+                    {university.name}
+                  </div>
+
+                  <div className="university-stats">
+                    {university.problemsSolved} problems solved
+                  </div>
+
+                </div>
+
+              </div>
+            ))}
+
+          </div>
+
+        </div>
+      )}
+
+      <div className="brand-features">
+
+        {stats.features.map((feature, index) => (
+          <Feature key={index} text={feature} />
+        ))}
+
+      </div>
 
     </div>
   );
@@ -710,7 +868,7 @@ function Feature({ text }) {
   return (
     <div className="brand-feature">
 
-      <CheckCircle2 size={17} />
+      <CheckCircle2 size={14} />
 
       <span>
         {text}

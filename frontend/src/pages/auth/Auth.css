@@ -24,7 +24,7 @@
 
   min-height: 100vh;
 
-  padding: 38px 8%;
+  padding: 25px 8%;
 
   overflow: hidden;
 
@@ -80,19 +80,19 @@
 }
 
 .auth-logo-mark {
-  width: 43px;
-  height: 43px;
+  width: 36px;
+  height: 36px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 11px;
+  border-radius: 9px;
 
   background: #d6a84f;
   color: #10251d;
 
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -121,30 +121,45 @@
 }
 
 .brand-message {
-  margin-top: 18vh;
+  margin-top: 8vh;
+}
+
+.dynamic-content {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .brand-tag {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 5px;
 
-  padding: 7px 10px;
+  padding: 5px 8px;
 
   border: 1px solid #315747;
   border-radius: 30px;
 
   color: #a9c7b9;
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .brand-message h1 {
-  margin-top: 22px;
+  margin-top: 15px;
 
-  font-size: clamp(34px, 4vw, 55px);
+  font-size: clamp(28px, 3.5vw, 45px);
   line-height: 1.05;
 
   letter-spacing: -0.05em;
@@ -157,35 +172,143 @@
 .brand-message > p {
   max-width: 500px;
 
-  margin-top: 22px;
+  margin-top: 12px;
 
   color: #a9bdb5;
 
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .brand-features {
   display: flex;
   flex-direction: column;
 
-  gap: 13px;
+  gap: 8px;
 
-  margin-top: 30px;
+  margin-top: 15px;
 }
 
 .brand-feature {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 
   color: #c3d2cc;
 
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .brand-feature svg {
   color: #d6a84f;
+}
+
+
+/* Role Statistics */
+
+.role-statistics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 15px;
+
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-value {
+  color: #d6a84f;
+
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-label {
+  color: #a9c7b9;
+
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+
+/* Top Universities */
+
+.top-universities {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.top-universities h3 {
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.universities-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.university-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 10px;
+
+  border: 1px solid #315747;
+  border-radius: 6px;
+
+  background: rgba(49, 87, 71, 0.2);
+}
+
+.university-rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 22px;
+  height: 22px;
+
+  border-radius: 5px;
+
+  background: #d6a84f;
+  color: #10251d;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.university-info {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.university-name {
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.university-stats {
+  color: #a9c7b9;
+
+  font-size: 9px;
 }
 
 
@@ -197,7 +320,7 @@
 
   margin-top: auto;
 
-  padding-top: 25px;
+  padding-top: 15px;
 
   border-top: 1px solid #29483c;
 
@@ -218,7 +341,7 @@
 
   min-height: 100vh;
 
-  padding: 50px;
+  padding: 30px;
 }
 
 .auth-container {
@@ -683,6 +806,22 @@
 
   .mobile-logo {
     display: flex;
+  }
+
+  .role-statistics {
+    grid-template-columns: 1fr;
+  }
+
+  .top-universities h3 {
+    font-size: 13px;
+  }
+
+  .university-item {
+    padding: 10px 12px;
+  }
+
+  .university-name {
+    font-size: 11px;
   }
 
 }
