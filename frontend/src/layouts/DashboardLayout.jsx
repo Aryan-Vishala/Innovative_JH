@@ -1,15 +1,17 @@
-import Sidebar from "../components/Sidebar";
+import Sidebar from '../components/Sidebar';
+import WalkthroughBar from '../components/WalkthroughBar';
 
-function DashboardLayout({ children }) {
+export default function DashboardLayout({ children, activeUser, onUserSwitched }) {
   return (
     <div className="dashboard-layout">
-      <Sidebar />
+      <Sidebar activeUser={activeUser} />
 
-      <main className="dashboard-content">
-        {children}
-      </main>
+      <div className="main-wrapper">
+        <WalkthroughBar activeUser={activeUser} onUserSwitched={onUserSwitched} />
+        <main className="dashboard-content">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
-
-export default DashboardLayout;

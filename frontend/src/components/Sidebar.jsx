@@ -1,24 +1,22 @@
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
-  AlertTriangle,
-  GraduationCap,
-  Building2,
-  FolderKanban,
-  BarChart3,
-  Bell,
-  Settings,
-  Map,
-  LogOut,
-} from "lucide-react";
+  UserCheck,
+  CheckCircle2,
+  Layers,
+  Cpu,
+  SlidersHorizontal,
+  Activity,
+  ShieldCheck,
+  Sparkles
+} from 'lucide-react';
 
-function Sidebar() {
+export default function Sidebar({ activeUser }) {
   return (
     <aside className="sidebar">
-
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-mark">IJ</div>
-
         <div>
           <h2>Innovative</h2>
           <span>Jharkhand</span>
@@ -27,82 +25,65 @@ function Sidebar() {
 
       {/* Navigation */}
       <nav className="sidebar-nav">
+        <p className="nav-label">BENCHMARK WORKFLOW</p>
 
-        <p className="nav-label">MAIN MENU</p>
+        <NavLink to="/citizen" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <UserCheck size={18} />
+          <span>1. Citizen Portal</span>
+        </NavLink>
 
-        <a href="#" className="nav-item active">
-          <LayoutDashboard size={19} />
-          <span>Dashboard</span>
-        </a>
+        <NavLink to="/pri-verify" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <CheckCircle2 size={18} />
+          <span>2. PRI Ground Truth</span>
+        </NavLink>
 
-        <a href="#" className="nav-item">
-          <AlertTriangle size={19} />
-          <span>Problems</span>
-        </a>
+        <NavLink to="/nodal-orchestration" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Layers size={18} />
+          <span>3. Nodal Orchestrator</span>
+        </NavLink>
 
-        <a href="#" className="nav-item">
-          <GraduationCap size={19} />
-          <span>Universities</span>
-        </a>
+        <NavLink to="/proposals-workspace" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Cpu size={18} />
+          <span>4. HEI & Startup Lab</span>
+        </NavLink>
 
-        <a href="#" className="nav-item">
-          <Building2 size={19} />
-          <span>Industry</span>
-        </a>
+        <NavLink to="/evaluation-panel" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <SlidersHorizontal size={18} />
+          <span>5. Expert Panel Scoring</span>
+        </NavLink>
 
-        <a href="#" className="nav-item">
-          <FolderKanban size={19} />
-          <span>Projects</span>
-        </a>
+        <NavLink to="/pilot-telemetry" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Activity size={18} />
+          <span>6. Pilot & Telemetry</span>
+        </NavLink>
 
-        <a href="#" className="nav-item">
-          <BarChart3 size={19} />
-          <span>Analytics</span>
-        </a>
+        <p className="nav-label">STATE GOVERNANCE</p>
 
-        <a href="#" className="nav-item">
-          <Map size={19} />
-          <span>Districts</span>
-        </a>
+        <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <LayoutDashboard size={18} />
+          <span>Macro State Analytics</span>
+        </NavLink>
 
-        <p className="nav-label">SYSTEM</p>
-
-        <a href="#" className="nav-item">
-          <Bell size={19} />
-          <span>Notifications</span>
-          <span className="notification-count">3</span>
-        </a>
-
-        <a href="#" className="nav-item">
-          <Settings size={19} />
-          <span>Settings</span>
-        </a>
-
+        <NavLink to="/audit-trail" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <ShieldCheck size={18} />
+          <span>Governance Audit Trail</span>
+        </NavLink>
       </nav>
 
-      {/* User */}
+      {/* Active User Pill */}
       <div className="sidebar-bottom">
-
         <div className="user-card">
-          <div className="avatar">
-            A
+          <div className="avatar-emoji">
+            {activeUser?.avatar || '🏛️'}
           </div>
 
           <div className="user-info">
-            <strong>Administrator</strong>
-            <span>Government Portal</span>
+            <strong>{activeUser?.fullName || 'Dr. Vivek Murmu'}</strong>
+            <span>{activeUser?.designation || activeUser?.role || 'State Admin'}</span>
+            <small className="org-text">{activeUser?.organizationName || 'Govt of Jharkhand'}</small>
           </div>
         </div>
-
-        <button className="logout-btn">
-          <LogOut size={18} />
-          Logout
-        </button>
-
       </div>
-
     </aside>
   );
 }
-
-export default Sidebar;
