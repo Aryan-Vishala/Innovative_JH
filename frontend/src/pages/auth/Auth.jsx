@@ -343,9 +343,11 @@ function AuthForm({
 
     event.preventDefault();
 
-    alert(
-      `${isRegister ? "Registration" : "Login"} will be connected to the backend soon.`
-    );
+    if (isRegister) {
+      alert("Registration will be connected to the backend soon.");
+    } else {
+      navigate("/dashboard");
+    }
 
   };
 

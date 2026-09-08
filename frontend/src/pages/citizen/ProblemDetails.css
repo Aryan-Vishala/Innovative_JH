@@ -1,0 +1,172 @@
+.problem-details-page {
+  padding: 32px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  background: transparent;
+  color: #166534;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 22px;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+}
+
+.details-category {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.details-header h1 {
+  margin: 12px 0 5px;
+  font-size: 30px;
+  color: #111827;
+}
+
+.details-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.details-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.details-main,
+.details-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.details-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 15px;
+  padding: 23px;
+}
+
+.details-card h2 {
+  margin: 0 0 18px;
+  font-size: 17px;
+  color: #111827;
+}
+
+.details-description {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.info-row {
+  display: flex;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid #f3f4f6;
+  color: #166534;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.info-row span {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.info-row strong {
+  color: #374151;
+  font-size: 13px;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 13px;
+  color: #9ca3af;
+}
+
+.timeline-item.completed {
+  color: #166534;
+}
+
+.timeline-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeline-item strong {
+  color: #374151;
+  font-size: 14px;
+}
+
+.timeline-item span {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.assignment-label {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.problem-not-found {
+  padding: 50px;
+  text-align: center;
+}
+
+.problem-not-found button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  background: #166534;
+  color: white;
+  cursor: pointer;
+}
+
+@media (max-width: 800px) {
+  .problem-details-page {
+    padding: 20px;
+  }
+
+  .details-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .details-layout {
+    grid-template-columns: 1fr;
+  }
+}

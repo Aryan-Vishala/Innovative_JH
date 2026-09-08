@@ -8,6 +8,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import ProblemCard from "../components/problems/ProblemCard";
+
 function Dashboard() {
   return (
     <div className="dashboard">
@@ -175,6 +177,17 @@ function Dashboard() {
 
       </section>
 
+      <ProblemCard
+        title="Non-functional street lights"
+        description="Several street lights are not working in the residential area, creating safety concerns for citizens."
+        category="Urban Infrastructure"
+        district="Ranchi"
+        status="In Progress"
+        priority="High"
+        submittedBy="Citizen"
+        date="08 Sep 2026"
+        onViewDetails={() => alert("Opening problem details")}
+      />
 
       {/* Recent Problems */}
 
