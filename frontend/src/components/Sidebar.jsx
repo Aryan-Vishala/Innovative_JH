@@ -9,61 +9,108 @@ import {
   Settings,
   Map,
   LogOut,
+  PlusCircle,
 } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { getCurrentUser, authApi } from "../services/api";
 
 function Sidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = getCurrentUser();
+
+  const handleLogout = () => {
+    authApi.logout();
+    navigate("/auth");
+  };
+
+  const isCitizen = user?.primaryRole === "citizen";
+
   return (
     <aside className="sidebar">
-
       {/* Logo */}
-      <div className="sidebar-logo">
+      <Link to="/" className="sidebar-logo" style={{ textDecoration: "none", color: "inherit" }}>
         <div className="logo-mark">IJ</div>
-
         <div>
           <h2>Innovative</h2>
           <span>Jharkhand</span>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="sidebar-nav">
-
         <p className="nav-label">MAIN MENU</p>
 
-        <a href="#" className="nav-item active">
-          <LayoutDashboard size={19} />
-          <span>Dashboard</span>
-        </a>
+        {isCitizen ? (
+          <>
+            <Link
+              to="/citizen"
+              className={`nav-item ${location.pathname === "/citizen" ? "active" : ""}`}
+            >
+              <LayoutDashboard size={19} />
+              <span>Citizen Dashboard</span>
+            </Link>
 
-        <a href="#" className="nav-item">
-          <AlertTriangle size={19} />
-          <span>Problems</span>
-        </a>
+            <Link
+              to="/citizen/submit-problem"
+              className={`nav-item ${location.pathname === "/citizen/submit-problem" ? "active" : ""}`}
+            >
+              <PlusCircle size={19} />
+              <span>Report a Problem</span>
+            </Link>
 
-        <a href="#" className="nav-item">
-          <GraduationCap size={19} />
-          <span>Universities</span>
-        </a>
+            <Link
+              to="/citizen/my-problems"
+              className={`nav-item ${location.pathname === "/citizen/my-problems" ? "active" : ""}`}
+            >
+              <AlertTriangle size={19} />
+              <span>My Submissions</span>
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              to="/dashboard"
+              className={`nav-item ${location.pathname === "/dashboard" ? "active" : ""}`}
+            >
+              <LayoutDashboard size={19} />
+              <span>State Dashboard</span>
+            </Link>
 
-        <a href="#" className="nav-item">
-          <Building2 size={19} />
-          <span>Industry</span>
-        </a>
+            <Link
+              to="/citizen/my-problems"
+              className={`nav-item ${location.pathname === "/citizen/my-problems" ? "active" : ""}`}
+            >
+              <AlertTriangle size={19} />
+              <span>Problems Directory</span>
+            </Link>
 
-        <a href="#" className="nav-item">
-          <FolderKanban size={19} />
-          <span>Projects</span>
-        </a>
+            <a href="#" className="nav-item">
+              <GraduationCap size={19} />
+              <span>Universities</span>
+            </a>
 
-        <a href="#" className="nav-item">
-          <BarChart3 size={19} />
-          <span>Analytics</span>
-        </a>
+            <a href="#" className="nav-item">
+              <Building2 size={19} />
+              <span>Industry</span>
+            </a>
 
-        <a href="#" className="nav-item">
-          <Map size={19} />
-          <span>Districts</span>
-        </a>
+            <a href="#" className="nav-item">
+              <FolderKanban size={19} />
+              <span>Projects</span>
+            </a>
+
+            <a href="#" className="nav-item">
+              <BarChart3 size={19} />
+              <span>Analytics</span>
+            </a>
+
+            <a href="#" className="nav-item">
+              <Map size={19} />
+              <span>Districts</span>
+            </a>
+          </>
+        )}
 
         <p className="nav-label">SYSTEM</p>
 
@@ -77,30 +124,28 @@ function Sidebar() {
           <Settings size={19} />
           <span>Settings</span>
         </a>
-
       </nav>
 
       {/* User */}
       <div className="sidebar-bottom">
-
         <div className="user-card">
           <div className="avatar">
-            A
+            {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
           </div>
 
           <div className="user-info">
-            <strong>Administrator</strong>
-            <span>Government Portal</span>
+            <strong>{user?.name || "Administrator"}</strong>
+            <span style={{ textTransform: "capitalize" }}>
+              {user?.primaryRole ? `${user.primaryRole} Portal` : "Government Portal"}
+            </span>
           </div>
         </div>
 
-        <button className="logout-btn">
+        <button className="logout-btn" onClick={handleLogout} title="Sign out">
           <LogOut size={18} />
           Logout
         </button>
-
       </div>
-
     </aside>
   );
 }

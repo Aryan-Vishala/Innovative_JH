@@ -1,2 +1,9 @@
 /backend/node_modules
 /frontend/node_modules
+.env
+*.env
+backend/.env
+backend/uploads/
+uploads/
+/frontend/dist
+.DS_Store

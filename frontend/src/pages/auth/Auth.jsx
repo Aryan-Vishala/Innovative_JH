@@ -17,6 +17,7 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { authApi } from "../../services/api";
 import "./Auth.css";
 
 const roles = [
@@ -489,181 +490,274 @@ function AuthForm({
   onBack,
   changeMode,
 }) {
+  const navigate = useNavigate();
+  const roleData = roles.find((item) => item.id === role);
+  const Icon = roleData ? roleData.icon : UserRound;
 
-  const roleData = roles.find(
-    (item) => item.id === role
-  );
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+    password: "",
+    organizationName: "",
+    district: "Ranchi",
+    location: "",
+  });
 
-  const Icon = roleData.icon;
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-
-  const handleSubmit = (event) => {
-
-    event.preventDefault();
-
-    if (isRegister) {
-      alert("Registration will be connected to the backend soon.");
-    } else {
-      navigate("/dashboard");
-    }
-
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errorMessage) setErrorMessage("");
   };
 
+  // Demo accounts for instant one-click login
+  const demoAccounts = [
+    { label: "Citizen (Rahul Kumar)", email: "citizen@gumla.in", role: "citizen" },
+    { label: "State Admin (Dr. Sunita Murmu)", email: "admin@jharkhand.gov.in", role: "government" },
+    { label: "PRI Mukhiya (Sanjay Oraon)", email: "pri.kamdara@jharkhand.gov.in", role: "government" },
+    { label: "ULB Municipal (Rameshwar Prasad)", email: "ulb.ranchi@jharkhand.gov.in", role: "government" },
+    { label: "Nodal HEI (Dr. A.K. Singh, BAU)", email: "nodal.water@bau.edu.in", role: "university" },
+    { label: "Industry CSR (Tata Steel Lead)", email: "csr.lead@tatasteel.com", role: "industry" },
+    { label: "MSME (Jharkhand CleanTech)", email: "director@cleantech-jh.in", role: "industry" },
+  ];
+
+  const handleQuickFill = (acc) => {
+    setFormData((prev) => ({
+      ...prev,
+      email: acc.email,
+      password: "password123",
+    }));
+    setErrorMessage("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      if (isRegister) {
+        // Register API call
+        const payload = {
+          name: formData.name,
+          email: formData.email,
+          mobile: formData.mobile,
+          password: formData.password,
+          primaryRole: role === "university" ? "participating_hei" : role,
+          organizationName: formData.organizationName || undefined,
+          organizationType:
+            role === "university"
+              ? "participating_hei"
+              : role === "industry"
+              ? "industry"
+              : undefined,
+          district: formData.district || formData.location || "Ranchi",
+        };
+
+        const res = await authApi.register(payload);
+        if (role === "citizen") {
+          navigate("/citizen");
+        } else {
+          navigate("/dashboard");
+        }
+      } else {
+        // Login API call
+        const res = await authApi.login({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        const userRole = res.user?.primaryRole;
+        if (userRole === "citizen") {
+          navigate("/citizen");
+        } else {
+          navigate("/dashboard");
+        }
+      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      setErrorMessage(err.message || "Authentication failed. Please check credentials.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="auth-form-wrapper">
-
-
       {/* Back */}
-
       <button
         className="back-button"
         onClick={onBack}
         type="button"
       >
-
         <ArrowLeft size={17} />
-
         Change role
-
       </button>
 
-
       {/* Selected Role */}
-
       <div className="selected-role">
-
         <div className="selected-role-icon">
           <Icon size={20} />
         </div>
-
         <div>
-
-          <span>
-            {isRegister
-              ? "Creating account as"
-              : "Signing in as"}
-          </span>
-
-          <strong>
-            {roleData.title}
-          </strong>
-
+          <span>{isRegister ? "Creating account as" : "Signing in as"}</span>
+          <strong>{roleData ? roleData.title : "User"}</strong>
         </div>
-
       </div>
 
-
       {/* Heading */}
-
       <div className="auth-heading">
-
         <span className="step-label">
-          {isRegister
-            ? "CREATE ACCOUNT"
-            : "SECURE LOGIN"}
+          {isRegister ? "CREATE ACCOUNT" : "SECURE LOGIN"}
         </span>
-
         <h2>
           {isRegister
             ? `Register as ${roleData.title}`
             : `${roleData.title} Login`}
         </h2>
-
         <p>
           {isRegister
             ? getRegisterDescription(role)
-            : "Enter your credentials to access your account."}
+            : "Enter your registered credentials to access your portal."}
         </p>
-
       </div>
 
+      {/* Error Message */}
+      {errorMessage && (
+        <div style={{
+          backgroundColor: "#fee2e2",
+          color: "#991b1b",
+          padding: "10px 14px",
+          borderRadius: "8px",
+          marginBottom: "16px",
+          fontSize: "14px",
+          border: "1px solid #f87171"
+        }}>
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Quick-Fill Demo Accounts Box for easy testing */}
+      {!isRegister && (
+        <div style={{
+          background: "rgba(16, 185, 129, 0.08)",
+          border: "1px dashed #10b981",
+          borderRadius: "8px",
+          padding: "12px",
+          marginBottom: "18px"
+        }}>
+          <p style={{ fontSize: "12px", fontWeight: "600", color: "#065f46", marginBottom: "8px" }}>
+            ⚡ QUICK DEMO LOGIN (Click any profile to auto-fill password: password123):
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {demoAccounts.map((acc, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleQuickFill(acc)}
+                style={{
+                  fontSize: "11px",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  background: "#ffffff",
+                  border: "1px solid #a7f3d0",
+                  cursor: "pointer",
+                  color: "#047857",
+                  fontWeight: "500"
+                }}
+              >
+                {acc.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Form */}
-
       <form
         className="auth-form"
         onSubmit={handleSubmit}
       >
-
-
         {/* Full Name */}
-
         {isRegister && (
-
           <FormField
             label="Full Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
             placeholder="Enter your full name"
             icon={<UserRound size={17} />}
           />
-
         )}
 
-
         {/* University / Industry Name */}
-
         {isRegister &&
-          (role === "university" ||
-            role === "industry") && (
-
+          (role === "university" || role === "industry") && (
             <FormField
               label={
                 role === "university"
                   ? "Institution Name"
                   : "Organization Name"
               }
+              name="organizationName"
+              value={formData.organizationName}
+              onChange={handleChange}
               placeholder={
                 role === "university"
                   ? "Enter university / institution name"
                   : "Enter organization name"
               }
               icon={
-                role === "university"
-                  ? <GraduationCap size={17} />
-                  : <Building2 size={17} />
+                role === "university" ? (
+                  <GraduationCap size={17} />
+                ) : (
+                  <Building2 size={17} />
+                )
               }
             />
-
           )}
-
 
         {/* Citizen Phone */}
-
-        {isRegister &&
-          role === "citizen" && (
-
-            <FormField
-              label="Phone Number"
-              placeholder="+91 XXXXX XXXXX"
-              icon={<Phone size={17} />}
-            />
-
-          )}
-
+        {isRegister && role === "citizen" && (
+          <FormField
+            label="Phone Number"
+            name="mobile"
+            value={formData.mobile}
+            onChange={handleChange}
+            placeholder="+91 XXXXX XXXXX"
+            icon={<Phone size={17} />}
+          />
+        )}
 
         {/* Location */}
-
         {isRegister &&
-          (role === "university" ||
-            role === "industry") && (
-
+          (role === "university" || role === "industry") && (
             <FormField
               label="Location"
-              placeholder="City / District"
+              name="district"
+              value={formData.district}
+              onChange={handleChange}
+              placeholder="City / District (e.g. Ranchi, Gumla)"
               icon={<MapPin size={17} />}
             />
-
           )}
 
-
         {/* Email */}
-
         <FormField
           label={
             role === "citizen"
               ? "Email or Mobile Number"
               : "Official Email Address"
           }
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
           placeholder={
             role === "citizen"
               ? "Enter email or mobile number"
@@ -672,156 +766,81 @@ function AuthForm({
           icon={<Mail size={17} />}
         />
 
-
         {/* Password */}
-
         <div className="form-field">
-
-          <label>
-            Password
-          </label>
-
-
+          <label>Password</label>
           <div className="input-wrapper">
-
             <LockKeyhole size={17} />
-
             <input
-              type={
-                showPassword
-                  ? "text"
-                  : "password"
-              }
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               placeholder="Enter your password"
               required
             />
-
-
             <button
               type="button"
               className="password-toggle"
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
+              onClick={() => setShowPassword(!showPassword)}
             >
-
-              {showPassword
-                ? <EyeOff size={17} />
-                : <Eye size={17} />}
-
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
-
           </div>
-
         </div>
 
-
         {/* Terms */}
-
         {isRegister && (
-
           <label className="terms">
-
-            <input
-              type="checkbox"
-              required
-            />
-
+            <input type="checkbox" required />
             <span>
-
-              I agree to the{" "}
-
-              <a href="#">
-                Terms of Use
-              </a>{" "}
-
-              and{" "}
-
-              <a href="#">
-                Privacy Policy
-              </a>.
-
+              I agree to the <a href="#">Terms of Use</a> and{" "}
+              <a href="#">Privacy Policy</a>.
             </span>
-
           </label>
-
         )}
-
 
         {/* Login Options */}
-
         {!isRegister && (
-
           <div className="form-options">
-
             <label>
-
               <input type="checkbox" />
-
               Remember me
-
             </label>
-
-
-            <button
-              type="button"
-            >
-              Forgot password?
-            </button>
-
+            <button type="button">Forgot password?</button>
           </div>
-
         )}
 
-
         {/* Submit */}
-
         <button
           className="submit-button"
           type="submit"
+          disabled={loading}
+          style={{ opacity: loading ? 0.7 : 1, cursor: loading ? "wait" : "pointer" }}
         >
-
-          {isRegister
+          {loading
+            ? "Processing..."
+            : isRegister
             ? "Create Account"
             : "Sign In"}
-
           <ArrowRight size={17} />
-
         </button>
-
       </form>
 
-
       {/* Switch */}
-
       <div className="auth-switch">
-
-        {isRegister
-          ? "Already have an account?"
-          : "Don't have an account?"}
-
+        {isRegister ? "Already have an account?" : "Don't have an account?"}
         <button
           onClick={() =>
-            changeMode(
-              isRegister
-                ? "login"
-                : "register"
-            )
+            changeMode(isRegister ? "login" : "register")
           }
         >
-
-          {isRegister
-            ? "Sign in"
-            : "Create account"}
-
+          {isRegister ? "Sign in" : "Create account"}
         </button>
-
       </div>
-
     </div>
   );
 }
-
 
 /* =====================================================
    FORM FIELD
@@ -832,28 +851,25 @@ function FormField({
   placeholder,
   icon,
   type = "text",
+  name,
+  value,
+  onChange,
+  required = true,
 }) {
-
   return (
     <div className="form-field">
-
-      <label>
-        {label}
-      </label>
-
-
+      <label>{label}</label>
       <div className="input-wrapper">
-
         {icon}
-
         <input
           type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
           placeholder={placeholder}
-          required
+          required={required}
         />
-
       </div>
-
     </div>
   );
 }
