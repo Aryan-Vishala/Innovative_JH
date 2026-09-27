@@ -8,11 +8,14 @@ const Organization = require('../models/Organization');
 const register = async (req, res) => {
   try {
     const {
-      name,
-      email,
-      mobile,
+      name: submittedName,
+      fullName,
+      email: submittedEmail,
+      mobile: submittedMobile,
+      phone,
       password,
-      primaryRole = 'citizen',
+      primaryRole,
+      role,
       district = '',
       block = '',
       panchayat = '',
@@ -21,6 +24,24 @@ const register = async (req, res) => {
       organizationType = '',
     } = req.body;
 
+    const name = typeof submittedName === 'string' ? submittedName.trim() :
+      typeof fullName === 'string' ? fullName.trim() : '';
+    const email = typeof submittedEmail === 'string' ? submittedEmail.trim().toLowerCase() : '';
+    const mobile = submittedMobile || phone;
+    const requestedRole = typeof primaryRole === 'string' ? primaryRole.trim().toLowerCase() :
+      typeof role === 'string' ? role.trim().toLowerCase() : 'citizen';
+    const roleAliases = {
+      university: 'participating_hei',
+      faculty: 'participating_hei',
+      industry_expert: 'industry',
+      government: 'pri',
+      pri_officer: 'pri',
+      nodal_director: 'nodal',
+      state_admin: 'admin',
+    };
+    const normalizedRole = roleAliases[requestedRole] || requestedRole;
+    const supportedRoles = ['citizen', 'pri', 'nodal', 'participating_hei', 'industry', 'admin'];
+
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -28,7 +49,14 @@ const register = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (!supportedRoles.includes(normalizedRole)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Unsupported account role',
+      });
+    }
+
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -37,14 +65,22 @@ const register = async (req, res) => {
     }
 
     let organizationId = null;
-    if (organizationName && organizationType) {
+    const inferredOrganizationType = {
+      pri: 'government_dept',
+      nodal: 'nodal_hei',
+      participating_hei: 'participating_hei',
+      industry: 'industry',
+    }[normalizedRole];
+    const resolvedOrganizationType = organizationType || inferredOrganizationType;
+
+    if (organizationName && resolvedOrganizationType) {
       let org = await Organization.findOne({
         name: new RegExp(`^${organizationName.trim()}$`, 'i'),
       });
       if (!org) {
         org = await Organization.create({
           name: organizationName.trim(),
-          type: organizationType,
+          type: resolvedOrganizationType,
           district: district || 'Ranchi',
           block: block || '',
           code: organizationName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10),
@@ -58,10 +94,10 @@ const register = async (req, res) => {
 
     const user = await User.create({
       name,
-      email: email.toLowerCase(),
+      email,
       mobile,
       passwordHash,
-      primaryRole,
+      primaryRole: normalizedRole,
       organizationId,
       organizationName,
       location: {
