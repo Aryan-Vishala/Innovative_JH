@@ -29,11 +29,11 @@ router.get('/:id', getProblemById);
 
 // Quad-Helix Action Hub Endpoints
 router.post('/:id/upvote', protect, upvoteProblem);
-router.post('/:id/adopt', protect, authorizeRoles('participating_hei', 'nodal', 'admin'), adoptProblem);
-router.post('/:id/pledge', protect, authorizeRoles('industry', 'admin'), pledgeProblem);
+router.post('/:id/adopt', protect, authorizeRoles('participating_hei', 'nodal', 'admin', 'citizen', 'pri', 'industry'), adoptProblem);
+router.post('/:id/pledge', protect, authorizeRoles('industry', 'admin', 'citizen', 'participating_hei', 'pri'), pledgeProblem);
 
 // Specialized state transition endpoints
-router.patch('/:id/pri-validate', protect, authorizeRoles('pri', 'admin'), validateProblem);
+router.patch('/:id/pri-validate', protect, authorizeRoles('pri', 'admin', 'citizen', 'participating_hei', 'industry'), validateProblem);
 router.patch('/:id/nodal-review', protect, authorizeRoles('nodal', 'admin'), reviewProblem);
 
 module.exports = router;

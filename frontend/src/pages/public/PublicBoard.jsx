@@ -27,6 +27,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { problemApi } from "../../services/api";
+import JharkhandDistrictMap from "../../components/map/JharkhandDistrictMap";
+import TrlProgressTracker from "../../components/problems/TrlProgressTracker";
 import "./PublicBoard.css";
 
 // 5 Standard Innovation Levels
@@ -354,6 +356,18 @@ function PublicBoard() {
     return ["All", ...Array.from(set)];
   }, [problems]);
 
+  // Problem counts mapped by district for the 24-district map
+  const problemsCountByDistrict = useMemo(() => {
+    const counts = {};
+    problems.forEach((p) => {
+      const dist = p.location?.district;
+      if (dist) {
+        counts[dist] = (counts[dist] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [problems]);
+
   // Filtered problems list
   const filteredProblems = useMemo(() => {
     return problems.filter((item) => {
@@ -482,11 +496,18 @@ function PublicBoard() {
 
           <nav className="portal-nav-links">
             <a
+              href="#district-map-section"
+              className="nav-link"
+              onClick={(e) => handleNavClick(e, "district-map-section")}
+            >
+              🗺️ 24-District Map
+            </a>
+            <a
               href="#innovation-stages"
               className="nav-link"
               onClick={(e) => handleNavClick(e, "innovation-stages")}
             >
-              Innovation Stages
+              TRL Stepper
             </a>
             <a
               href="#analytics-breakdown"
@@ -740,6 +761,28 @@ function PublicBoard() {
             <DistrictBar name="Bokaro & Hazaribagh" count={1} total={problems.length || 6} desc="Cold storage and rural clinic telemedicine" />
           </div>
         </div>
+      </section>
+
+      {/* =====================================================
+          MAP SECTION: INTERACTIVE JHARKHAND DISTRICT INNOVATION MAP
+      ===================================================== */}
+      <section id="district-map-section" className="portal-map-section" style={{ maxWidth: "1400px", margin: "0 auto 36px", padding: "0 24px" }}>
+        <JharkhandDistrictMap
+          selectedDistrict={selectedDistrict}
+          onSelectDistrict={(dist) => {
+            setSelectedDistrict(dist);
+          }}
+          onFilterChallenges={(dist) => {
+            setSelectedDistrict(dist);
+            const target = document.getElementById("problems-showcase");
+            if (target) {
+              const navOffset = 84;
+              const elementPosition = target.getBoundingClientRect().top + window.pageYOffset;
+              window.scrollTo({ top: elementPosition - navOffset, behavior: "smooth" });
+            }
+          }}
+          problemsCountByDistrict={problemsCountByDistrict}
+        />
       </section>
 
       {/* =====================================================
@@ -1188,32 +1231,12 @@ function VerifiedProblemCard({ problem, onViewTimeline }) {
         )}
       </div>
 
-      {/* 5-Step Visual Progress Stepper */}
-      <div className="progress-stepper-wrap">
-        <div className="stepper-header">
-          <span>Lifecycle Progress</span>
-          <span className="stepper-current-label">{levelLabels[level]}</span>
-        </div>
-        <div className="stepper-bar-track">
-          {[1, 2, 3, 4, 5].map((step) => {
-            const isFilled = step <= level;
-            const isCurrent = step === level;
-            return (
-              <div
-                key={step}
-                className={`stepper-bar-segment ${isFilled ? "filled" : ""} ${isCurrent ? "current" : ""}`}
-              />
-            );
-          })}
-        </div>
-        <div className="stepper-dots-row">
-          <span>Verified</span>
-          <span>Adopted</span>
-          <span>Prototype</span>
-          <span>Testing</span>
-          <span>Deployed</span>
-        </div>
-      </div>
+      {/* TRL Solution Maturity Progress Tracker (Compact) */}
+      <TrlProgressTracker
+        currentLevel={level}
+        compact={true}
+        solutionInfo={problem.solution}
+      />
 
       {/* University Solution Highlight (if assigned/developed) */}
       {problem.solution?.universityName && (
@@ -1243,9 +1266,21 @@ function VerifiedProblemCard({ problem, onViewTimeline }) {
           Reported {new Date(problem.createdAt || Date.now()).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}
         </span>
 
-        <button type="button" className="btn-view-timeline" onClick={onViewTimeline}>
-          View Status Timeline <ChevronRight size={14} />
-        </button>
+        <div className="card-footer-buttons">
+          <Link
+            to={`/citizen/problems/${problem.problemId || problem._id}`}
+            className="btn-quad-hub-link"
+            title="Open Quad-Helix Action Hub"
+          >
+            <Sparkles size={13} />
+            <span>Quad-Helix Hub</span>
+            <ArrowRight size={13} />
+          </Link>
+
+          <button type="button" className="btn-view-timeline" onClick={onViewTimeline}>
+            Audit Timeline <ChevronRight size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1303,7 +1338,7 @@ function CompactProblemsTable({ problems, onViewTimeline }) {
             <th>Problem ID</th>
             <th>Challenge & Category</th>
             <th>Location</th>
-            <th>Innovation Stage</th>
+            <th>Solution Maturity (TRL)</th>
             <th>University / Lead Team</th>
             <th>Status Action</th>
           </tr>
@@ -1329,10 +1364,7 @@ function CompactProblemsTable({ problems, onViewTimeline }) {
                   </div>
                 </td>
                 <td>
-                  <span className={`level-status-pill level-status-${level}`}>
-                    <span className="pulsing-dot"></span>
-                    {levelLabels[level]}
-                  </span>
+                  <TrlProgressTracker currentLevel={level} compact={true} solutionInfo={p.solution} />
                 </td>
                 <td>
                   <div style={{ fontWeight: 600, color: "#10251d", fontSize: "12.5px" }}>
@@ -1354,13 +1386,33 @@ function CompactProblemsTable({ problems, onViewTimeline }) {
                   )}
                 </td>
                 <td>
-                  <button
-                    type="button"
-                    className="btn-table-action"
-                    onClick={() => onViewTimeline(p)}
-                  >
-                    View Status <ChevronRight size={13} />
-                  </button>
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    <button
+                      type="button"
+                      className="btn-table-action"
+                      onClick={() => onViewTimeline(p)}
+                    >
+                      Audit
+                    </button>
+                    <Link
+                      to={`/citizen/problems/${p.problemId || p._id}`}
+                      className="btn-table-action"
+                      style={{
+                        background: "#eff6ff",
+                        color: "#1d4ed8",
+                        borderColor: "#bfdbfe",
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        fontWeight: 700,
+                      }}
+                      title="Open Quad-Helix Action Hub"
+                    >
+                      <span>Quad-Helix</span>
+                      <ArrowRight size={11} />
+                    </Link>
+                  </div>
                 </td>
               </tr>
             );
