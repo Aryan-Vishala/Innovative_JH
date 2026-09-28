@@ -22,10 +22,12 @@ const createProblem = async (req, res) => {
       evidenceCaption = '',
     } = req.body;
 
-    if (!title || !description || !category || !district || !block) {
+    const resolvedBlock = (block && block.trim()) || 'Central Block';
+
+    if (!title || !description || !category || !district) {
       return res.status(400).json({
         success: false,
-        message: 'Title, description, category, district, and block are required',
+        message: 'Title, description, category, and district are required',
       });
     }
 
@@ -52,7 +54,7 @@ const createProblem = async (req, res) => {
     const initialTimeline = [
       {
         stage: 'SUBMITTED',
-        description: `Problem reported by ${req.user.name || 'Citizen'} in ${district}, Block: ${block}`,
+        description: `Problem reported by ${req.user.name || 'Citizen'} in ${district}, Block: ${resolvedBlock}`,
         updatedBy: req.user._id,
         updaterName: req.user.name || 'Citizen',
         timestamp: new Date(),
@@ -68,7 +70,7 @@ const createProblem = async (req, res) => {
       submitterName: req.user.name || 'Citizen',
       location: {
         district,
-        block,
+        block: resolvedBlock,
         panchayat,
         village,
         coordinates: {
