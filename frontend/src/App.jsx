@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Auth from "./pages/auth/Auth";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
+import PublicBoard from "./pages/public/PublicBoard";
 
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 import MyProblems from "./pages/citizen/MyProblems";
@@ -14,10 +15,20 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* Landing */}
+        {/* Public Transparency & Analytical Board (First Page) */}
         <Route
           path="/"
-          element={<Navigate to="/auth?mode=login" replace />}
+          element={<PublicBoard />}
+        />
+
+        <Route
+          path="/tracker"
+          element={<PublicBoard />}
+        />
+
+        <Route
+          path="/analytics"
+          element={<PublicBoard />}
         />
 
         {/* Authentication */}
@@ -41,7 +52,7 @@ function App() {
           path="*"
           element={
             <Navigate
-              to="/auth?mode=login"
+              to="/"
               replace
             />
           }

@@ -104,6 +104,10 @@ export const problemApi = {
     return request(`/problems/${id}`);
   },
 
+  getPublicAnalytics: async () => {
+    return request('/problems/public-analytics');
+  },
+
   submit: async (formData) => {
     return request('/problems', {
       method: 'POST',

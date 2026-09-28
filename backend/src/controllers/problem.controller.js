@@ -108,15 +108,34 @@ const getProblems = async (req, res) => {
       category,
       district,
       search,
+      verifiedOnly,
+      level,
       page = 1,
       limit = 20,
     } = req.query;
 
     const query = {};
 
-    if (status && status !== 'All') {
+    if (verifiedOnly === 'true') {
+      query.status = {
+        $in: [
+          'PRI_VERIFIED',
+          'NODAL_REVIEWED',
+          'MASTER_PROBLEM_CREATED',
+          'SOLUTION_IN_PROGRESS',
+          'PROTOTYPE_READY',
+          'PILOT_TESTING',
+          'DEPLOYED',
+        ],
+      };
+    } else if (status && status !== 'All') {
       query.status = status;
     }
+
+    if (level && level !== 'All') {
+      query['solution.level'] = parseInt(level, 10);
+    }
+
     if (category && category !== 'All') {
       query.category = category;
     }
@@ -150,6 +169,168 @@ const getProblems = async (req, res) => {
       data: problems,
     });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get Public Analytical Dashboard KPIs & Distributions
+// @route   GET /api/v1/problems/public-analytics
+// @access  Public
+const getPublicAnalytics = async (req, res) => {
+  try {
+    const totalProblems = await Problem.countDocuments();
+    const verifiedProblems = await Problem.countDocuments({
+      status: {
+        $in: [
+          'PRI_VERIFIED',
+          'NODAL_REVIEWED',
+          'MASTER_PROBLEM_CREATED',
+          'SOLUTION_IN_PROGRESS',
+          'PROTOTYPE_READY',
+          'PILOT_TESTING',
+          'DEPLOYED',
+        ],
+      },
+    });
+
+    const universityAdopted = await Problem.countDocuments({
+      status: {
+        $in: [
+          'NODAL_REVIEWED',
+          'MASTER_PROBLEM_CREATED',
+          'SOLUTION_IN_PROGRESS',
+          'PROTOTYPE_READY',
+          'PILOT_TESTING',
+          'DEPLOYED',
+        ],
+      },
+    });
+
+    const prototypeCreated = await Problem.countDocuments({
+      status: { $in: ['PROTOTYPE_READY', 'PILOT_TESTING', 'DEPLOYED'] },
+    });
+
+    const fieldTesting = await Problem.countDocuments({
+      status: { $in: ['PILOT_TESTING', 'DEPLOYED'] },
+    });
+
+    const deployedSolutions = await Problem.countDocuments({
+      status: 'DEPLOYED',
+    });
+
+    // Sum estimated beneficiaries
+    const impactAgg = await Problem.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalBeneficiaries: { $sum: '$impact.estimatedPopulation' },
+        },
+      },
+    ]);
+    const totalBeneficiaries = impactAgg[0]?.totalBeneficiaries || 0;
+
+    // Categories breakdown
+    const categoryAgg = await Problem.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 },
+          verifiedCount: {
+            $sum: {
+              $cond: [
+                {
+                  $in: [
+                    '$status',
+                    [
+                      'PRI_VERIFIED',
+                      'NODAL_REVIEWED',
+                      'MASTER_PROBLEM_CREATED',
+                      'SOLUTION_IN_PROGRESS',
+                      'PROTOTYPE_READY',
+                      'PILOT_TESTING',
+                      'DEPLOYED',
+                    ],
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    // District breakdown
+    const districtAgg = await Problem.aggregate([
+      {
+        $group: {
+          _id: '$location.district',
+          count: { $sum: 1 },
+          verifiedCount: {
+            $sum: {
+              $cond: [
+                {
+                  $in: [
+                    '$status',
+                    [
+                      'PRI_VERIFIED',
+                      'NODAL_REVIEWED',
+                      'MASTER_PROBLEM_CREATED',
+                      'SOLUTION_IN_PROGRESS',
+                      'PROTOTYPE_READY',
+                      'PILOT_TESTING',
+                      'DEPLOYED',
+                    ],
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    // Level breakdown
+    const levelCounts = {
+      1: verifiedProblems,
+      2: universityAdopted,
+      3: prototypeCreated,
+      4: fieldTesting,
+      5: deployedSolutions,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: {
+        kpis: {
+          totalReported: totalProblems,
+          verified: verifiedProblems,
+          universityAdopted,
+          prototypeReady: prototypeCreated,
+          fieldTesting,
+          deployed: deployedSolutions,
+          totalBeneficiaries,
+        },
+        levels: levelCounts,
+        categories: categoryAgg.map((c) => ({
+          name: c._id || 'Other',
+          total: c.count,
+          verified: c.verifiedCount,
+        })),
+        districts: districtAgg.map((d) => ({
+          district: d._id || 'Jharkhand',
+          total: d.count,
+          verified: d.verifiedCount,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('Error in getPublicAnalytics:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -209,6 +390,7 @@ const getProblemById = async (req, res) => {
 module.exports = {
   createProblem,
   getProblems,
+  getPublicAnalytics,
   getMySubmissions,
   getProblemById,
 };

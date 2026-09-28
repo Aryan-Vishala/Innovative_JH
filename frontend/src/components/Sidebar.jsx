@@ -66,6 +66,14 @@ function Sidebar() {
               <AlertTriangle size={19} />
               <span>My Submissions</span>
             </Link>
+
+            <Link
+              to="/"
+              className={`nav-item ${location.pathname === "/" ? "active" : ""}`}
+            >
+              <BarChart3 size={19} />
+              <span>Public Tracker</span>
+            </Link>
           </>
         ) : (
           <>
@@ -83,6 +91,14 @@ function Sidebar() {
             >
               <AlertTriangle size={19} />
               <span>Problems Directory</span>
+            </Link>
+
+            <Link
+              to="/"
+              className={`nav-item ${location.pathname === "/" ? "active" : ""}`}
+            >
+              <BarChart3 size={19} />
+              <span>Public Tracker</span>
             </Link>
 
             <a href="#" className="nav-item">

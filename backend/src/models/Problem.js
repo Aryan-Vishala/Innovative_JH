@@ -91,6 +91,10 @@ const problemSchema = new mongoose.Schema(
         'REJECTED',
         'NODAL_REVIEWED',
         'MASTER_PROBLEM_CREATED',
+        'SOLUTION_IN_PROGRESS',
+        'PROTOTYPE_READY',
+        'PILOT_TESTING',
+        'DEPLOYED',
       ],
       default: 'SUBMITTED',
       index: true,
@@ -98,6 +102,25 @@ const problemSchema = new mongoose.Schema(
     assignedTo: {
       type: String,
       default: 'Local PRI / ULB Verification Pending',
+    },
+    solution: {
+      universityName: { type: String, default: '' },
+      facultyLead: { type: String, default: '' },
+      teamName: { type: String, default: '' },
+      solutionTitle: { type: String, default: '' },
+      solutionSummary: { type: String, default: '' },
+      level: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 1, // 1: Verified, 2: University Adopted, 3: Prototype Created, 4: Field Testing, 5: Deployed Solution
+      },
+      levelTag: {
+        type: String,
+        default: 'Verified',
+      },
+      deployedAt: { type: Date, default: null },
+      impactOutcome: { type: String, default: '' },
     },
     priVerification: {
       verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

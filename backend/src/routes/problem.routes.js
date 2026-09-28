@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createProblem,
   getProblems,
+  getPublicAnalytics,
   getMySubmissions,
   getProblemById,
 } = require('../controllers/problem.controller');
@@ -14,6 +15,7 @@ const upload = require('../middleware/upload.middleware');
 
 router.post('/', protect, upload.array('evidenceFiles', 5), createProblem);
 router.get('/', getProblems);
+router.get('/public-analytics', getPublicAnalytics);
 router.get('/my-submissions', protect, getMySubmissions);
 router.get('/:id', getProblemById);
 
