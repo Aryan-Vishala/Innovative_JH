@@ -150,6 +150,62 @@ const problemSchema = new mongoose.Schema(
       masterProblemId: { type: String, default: '' },
       remarks: { type: String, default: '' },
     },
+    aiAnalysis: {
+      detectedDomain: { type: String, default: '' },
+      subdomain: { type: String, default: '' },
+      severity: { type: String, default: '' },
+      severityScore: { type: Number, default: 0 },
+      sdgs: [
+        {
+          code: String,
+          name: String,
+        },
+      ],
+      recommendedUniversity: {
+        name: String,
+        department: String,
+        matchScore: Number,
+        rationale: String,
+      },
+      recommendedIndustry: {
+        name: String,
+        mission: String,
+        matchScore: Number,
+        pledgeTypes: [String],
+      },
+      requiredExpertise: [String],
+      aiConfidence: { type: Number, default: 0 },
+      analyzedAt: { type: Date, default: null },
+    },
+    communityUpvotes: {
+      count: { type: Number, default: 0 },
+      upvotedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    },
+    adoption: {
+      isAdopted: { type: Boolean, default: false },
+      adoptedByOrg: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', default: null },
+      orgName: { type: String, default: '' },
+      facultyPi: { type: String, default: '' },
+      studentTeam: { type: [String], default: [] },
+      projectTitle: { type: String, default: '' },
+      adoptedAt: { type: Date, default: null },
+    },
+    pledges: [
+      {
+        industryOrg: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', default: null },
+        orgName: { type: String, default: '' },
+        pledgedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+        pledgerName: { type: String, default: '' },
+        resourceType: {
+          type: String,
+          enum: ['Funding', 'Hardware', 'Mentorship', 'Cloud Resources', 'Manufacturing'],
+          default: 'Funding',
+        },
+        pledgeDetails: { type: String, default: '' },
+        amount: { type: Number, default: 0 },
+        pledgedAt: { type: Date, default: Date.now },
+      },
+    ],
     timeline: [timelineSchema],
   },
   {

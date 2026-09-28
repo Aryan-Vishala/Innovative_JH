@@ -11,19 +11,70 @@ import {
   GraduationCap,
   Paperclip,
   Loader2,
+  ThumbsUp,
+  Sparkles,
+  Cpu,
+  Layers,
+  Target,
+  Building2,
+  DollarSign,
+  Award,
+  ChevronRight,
+  X,
+  Heart,
+  TrendingUp,
+  AlertTriangle,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { problemApi } from "../../services/api";
+import { problemApi, getCurrentUser } from "../../services/api";
 import ProblemStatusBadge from "../../components/problems/ProblemStatusBadge";
 import "./ProblemDetails.css";
+
+const TRL_STAGES = [
+  { level: 1, label: "Level 1: Ground Verified", desc: "PRI / ULB inspected" },
+  { level: 2, label: "Level 2: R&D Adopted", desc: "HEI Faculty & Student Lab" },
+  { level: 3, label: "Level 3: Lab Prototype", desc: "TRL 4 Functional Unit" },
+  { level: 4, label: "Level 4: Field Pilot", desc: "TRL 6 Village Ground Test" },
+  { level: 5, label: "Level 5: State Deployed", desc: "Scaled Across Districts" },
+];
 
 function ProblemDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const currentUser = getCurrentUser();
 
   const [problem, setProblem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Upvote State
+  const [upvoteCount, setUpvoteCount] = useState(0);
+  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [isUpvoting, setIsUpvoting] = useState(false);
+
+  // Live AI Triage State (if problem didn't have it saved)
+  const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
+
+  // Adoption Modal State
+  const [showAdoptModal, setShowAdoptModal] = useState(false);
+  const [adoptData, setAdoptData] = useState({
+    projectTitle: "",
+    facultyPi: currentUser?.name || "",
+    studentTeam: "",
+  });
+  const [adoptLoading, setAdoptLoading] = useState(false);
+
+  // Pledge Modal State
+  const [showPledgeModal, setShowPledgeModal] = useState(false);
+  const [pledgeData, setPledgeData] = useState({
+    resourceType: "Funding",
+    amount: "500000",
+    pledgeDetails: "",
+  });
+  const [pledgeLoading, setPledgeLoading] = useState(false);
+
+  // Action status message
+  const [actionSuccess, setActionSuccess] = useState("");
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -32,6 +83,14 @@ function ProblemDetails() {
         const res = await problemApi.getById(id);
         if (res.success && res.data) {
           setProblem(res.data);
+          setUpvoteCount(res.data.communityUpvotes?.count || 0);
+
+          if (currentUser && res.data.communityUpvotes?.upvotedBy) {
+            const hasUserUpvoted = res.data.communityUpvotes.upvotedBy.some(
+              (u) => (typeof u === "string" ? u : u._id || u) === currentUser._id
+            );
+            setHasUpvoted(hasUserUpvoted);
+          }
         } else {
           setError("Problem not found in the registry.");
         }
@@ -47,6 +106,106 @@ function ProblemDetails() {
       fetchDetails();
     }
   }, [id]);
+
+  const handleUpvote = async () => {
+    if (!currentUser) {
+      navigate("/auth");
+      return;
+    }
+    try {
+      setIsUpvoting(true);
+      const res = await problemApi.upvote(problem._id);
+      if (res.success) {
+        setUpvoteCount(res.count);
+        setHasUpvoted(res.hasUpvoted);
+      }
+    } catch (err) {
+      console.error("Upvote error:", err);
+    } finally {
+      setIsUpvoting(false);
+    }
+  };
+
+  const handleRunAiTriage = async () => {
+    try {
+      setIsAnalyzingAi(true);
+      const res = await problemApi.getAiTriage({
+        title: problem.title,
+        description: problem.description,
+        category: problem.category,
+        district: problem.location?.district,
+      });
+      if (res.success && res.data) {
+        setProblem((prev) => ({
+          ...prev,
+          aiAnalysis: res.data,
+        }));
+      }
+    } catch (err) {
+      console.error("AI Triage error:", err);
+    } finally {
+      setIsAnalyzingAi(false);
+    }
+  };
+
+  const handleAdoptSubmit = async (e) => {
+    e.preventDefault();
+    if (!currentUser) {
+      navigate("/auth");
+      return;
+    }
+    try {
+      setAdoptLoading(true);
+      const teamMembers = adoptData.studentTeam
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const res = await problemApi.adopt(problem._id, {
+        projectTitle: adoptData.projectTitle || `R&D: ${problem.title}`,
+        facultyPi: adoptData.facultyPi || currentUser.name,
+        studentTeam: teamMembers,
+      });
+
+      if (res.success && res.data) {
+        setProblem(res.data);
+        setShowAdoptModal(false);
+        setActionSuccess("Challenge successfully adopted for University R&D!");
+        setTimeout(() => setActionSuccess(""), 4500);
+      }
+    } catch (err) {
+      alert(err.message || "Failed to adopt problem");
+    } finally {
+      setAdoptLoading(false);
+    }
+  };
+
+  const handlePledgeSubmit = async (e) => {
+    e.preventDefault();
+    if (!currentUser) {
+      navigate("/auth");
+      return;
+    }
+    try {
+      setPledgeLoading(true);
+      const res = await problemApi.pledge(problem._id, {
+        resourceType: pledgeData.resourceType,
+        amount: pledgeData.amount,
+        pledgeDetails: pledgeData.pledgeDetails,
+      });
+
+      if (res.success && res.data) {
+        setProblem(res.data);
+        setShowPledgeModal(false);
+        setActionSuccess("Industry CSR resource pledge submitted successfully!");
+        setTimeout(() => setActionSuccess(""), 4500);
+      }
+    } catch (err) {
+      alert(err.message || "Failed to submit pledge");
+    } finally {
+      setPledgeLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -93,16 +252,42 @@ function ProblemDetails() {
       })
     : "Recent";
 
+  const currentLevel = problem.solution?.level || (problem.status === "SUBMITTED" ? 1 : 2);
+  const ai = problem.aiAnalysis;
+
   return (
     <div className="problem-details-page">
-      <button
-        className="back-button"
-        onClick={() => navigate(-1)}
-      >
-        <ArrowLeft size={17} />
-        Back
-      </button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px" }}>
+        <button className="back-button" onClick={() => navigate(-1)}>
+          <ArrowLeft size={17} />
+          Back
+        </button>
 
+        {/* Upvote CTA in Top Bar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <button
+            type="button"
+            className={`upvote-action-btn ${hasUpvoted ? "upvoted" : ""}`}
+            onClick={handleUpvote}
+            disabled={isUpvoting}
+            title={hasUpvoted ? "You have endorsed this issue" : "Click if you face this issue too"}
+          >
+            <ThumbsUp size={16} fill={hasUpvoted ? "currentColor" : "none"} />
+            <span>
+              {hasUpvoted ? "Endorsed by You" : "I am Also Affected"} ({upvoteCount})
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {actionSuccess && (
+        <div className="action-success-banner">
+          <CheckCircle2 size={20} />
+          <span>{actionSuccess}</span>
+        </div>
+      )}
+
+      {/* Header */}
       <div className="details-header">
         <div>
           <span className="details-category">{problem.category}</span>
@@ -112,40 +297,310 @@ function ProblemDetails() {
           </p>
         </div>
 
-        <ProblemStatusBadge status={problem.status} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+          <ProblemStatusBadge status={problem.status} />
+          {problem.adoption?.isAdopted && (
+            <span className="adopted-tag">
+              <GraduationCap size={13} />
+              Adopted by {problem.adoption.orgName}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* TRL Stepper: Technology Readiness & Societal Maturity Level */}
+      <div className="trl-stepper-card">
+        <div className="trl-header">
+          <div className="trl-title-wrap">
+            <TrendingUp size={18} color="#2563eb" />
+            <h3>Solution Maturity & Quad-Helix Lifecycle</h3>
+          </div>
+          <span className="trl-current-badge">
+            Current Stage: Level {currentLevel} of 5
+          </span>
+        </div>
+
+        <div className="trl-steps-grid">
+          {TRL_STAGES.map((st) => {
+            const isDone = st.level < currentLevel;
+            const isCurrent = st.level === currentLevel;
+            return (
+              <div
+                key={st.level}
+                className={`trl-step-item ${isDone ? "done" : ""} ${isCurrent ? "current" : ""}`}
+              >
+                <div className="trl-step-circle">
+                  {isDone ? <CheckCircle2 size={16} /> : st.level}
+                </div>
+                <div className="trl-step-info">
+                  <strong>{st.label}</strong>
+                  <span>{st.desc}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="details-layout">
         <div className="details-main">
-          {/* Description */}
+          {/* Problem Description */}
           <section className="details-card">
             <h2>Problem Description</h2>
             <p className="details-description">{problem.description}</p>
 
             {problem.impact && (
               <div style={{ marginTop: "20px", display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                <div style={{ background: "#f9fafb", padding: "10px 14px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                  <span style={{ fontSize: "12px", color: "#6b7280", display: "block" }}>Beneficiaries</span>
-                  <strong style={{ fontSize: "15px", color: "#111827" }}>
-                    {problem.impact.estimatedPopulation ? `${problem.impact.estimatedPopulation} citizens` : "Local community"}
+                <div className="impact-badge-box">
+                  <span>Beneficiaries</span>
+                  <strong>
+                    {problem.impact.estimatedPopulation
+                      ? `${problem.impact.estimatedPopulation} citizens`
+                      : "Local community"}
                   </strong>
                 </div>
 
-                <div style={{ background: "#f9fafb", padding: "10px 14px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                  <span style={{ fontSize: "12px", color: "#6b7280", display: "block" }}>Severity Claim</span>
-                  <strong style={{ fontSize: "15px", color: "#111827" }}>
-                    {problem.impact.citizenReportedSeverity || "Medium"}
-                  </strong>
+                <div className="impact-badge-box">
+                  <span>Severity Claim</span>
+                  <strong>{problem.impact.citizenReportedSeverity || "Medium"}</strong>
                 </div>
 
-                <div style={{ background: "#f9fafb", padding: "10px 14px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                  <span style={{ fontSize: "12px", color: "#6b7280", display: "block" }}>Frequency</span>
-                  <strong style={{ fontSize: "15px", color: "#111827" }}>
-                    {problem.impact.frequency || "Daily"}
-                  </strong>
+                <div className="impact-badge-box">
+                  <span>Frequency</span>
+                  <strong>{problem.impact.frequency || "Daily"}</strong>
                 </div>
               </div>
             )}
+          </section>
+
+          {/* AI Insights Card */}
+          <section className="details-card ai-insights-details-card">
+            <div className="ai-card-glow-bar" />
+            <div className="ai-details-header">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div className="ai-icon-badge">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: "17px", color: "#1e1b4b" }}>
+                    AI Problem Triage & University-Industry Matcher
+                  </h2>
+                  <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>
+                    Neural evaluation & automatic capability allocation
+                  </p>
+                </div>
+              </div>
+
+              {ai ? (
+                <span className="ai-confidence-pill">
+                  <Cpu size={14} />
+                  {ai.aiConfidence || 94}% AI Match Confidence
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleRunAiTriage}
+                  disabled={isAnalyzingAi}
+                  className="run-ai-btn"
+                >
+                  <Sparkles size={14} />
+                  {isAnalyzingAi ? "Analyzing..." : "Run AI Triage"}
+                </button>
+              )}
+            </div>
+
+            {ai ? (
+              <div className="ai-details-body">
+                {/* Detected Domain & Severity */}
+                <div className="ai-metric-row">
+                  <div className="ai-metric-label">
+                    <Target size={16} />
+                    <strong>Detected Domain & Severity:</strong>
+                  </div>
+                  <div className="ai-metric-values">
+                    <span className="domain-pill">{ai.detectedDomain}</span>
+                    <span className="separator">/</span>
+                    <span className={`severity-pill ${ai.severity?.toLowerCase().includes("critical") ? "critical" : "high"}`}>
+                      {ai.severity}
+                    </span>
+                  </div>
+                </div>
+
+                {/* SDG Alignment */}
+                <div className="ai-metric-row">
+                  <div className="ai-metric-label">
+                    <Layers size={16} />
+                    <strong>SDG Alignment:</strong>
+                  </div>
+                  <div className="sdg-tags-container">
+                    {ai.sdgs &&
+                      ai.sdgs.map((sdg) => (
+                        <span key={sdg.code} className={`sdg-badge ${sdg.code.toLowerCase().replace(/\s+/g, "-")}`}>
+                          <strong>{sdg.code}</strong> ({sdg.name})
+                        </span>
+                      ))}
+                  </div>
+                </div>
+
+                {/* University & Industry Recommendations */}
+                <div className="ai-matches-grid" style={{ marginTop: "16px" }}>
+                  {/* University */}
+                  <div className="ai-match-box university">
+                    <div className="ai-match-top">
+                      <div className="ai-match-icon university">
+                        <GraduationCap size={18} />
+                      </div>
+                      <span className="match-score-badge university">
+                        {ai.recommendedUniversity?.matchScore || 94}% Match
+                      </span>
+                    </div>
+                    <span className="ai-match-category">Recommended University Lab</span>
+                    <h4 className="ai-match-name">
+                      {ai.recommendedUniversity?.name} — {ai.recommendedUniversity?.department}
+                    </h4>
+                    <p className="ai-match-rationale">
+                      {ai.recommendedUniversity?.rationale || "Specialized academic R&D testing lab and student project capability in this domain."}
+                    </p>
+                  </div>
+
+                  {/* Industry */}
+                  <div className="ai-match-box industry">
+                    <div className="ai-match-top">
+                      <div className="ai-match-icon industry">
+                        <Building2 size={18} />
+                      </div>
+                      <span className="match-score-badge industry">
+                        {ai.recommendedIndustry?.matchScore || 91}% Match
+                      </span>
+                    </div>
+                    <span className="ai-match-category">Recommended Industry Partner</span>
+                    <h4 className="ai-match-name">
+                      {ai.recommendedIndustry?.name} — {ai.recommendedIndustry?.mission}
+                    </h4>
+                    <div className="ai-pledge-tags">
+                      {ai.recommendedIndustry?.pledgeTypes?.map((pt, idx) => (
+                        <span key={idx} className="pledge-tag">{pt}</span>
+                      )) || <span className="pledge-tag">CSR Grant & Water Testing</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Technical Expertise */}
+                {ai.requiredExpertise && ai.requiredExpertise.length > 0 && (
+                  <div className="ai-expertise-row" style={{ marginTop: "16px" }}>
+                    <span className="expertise-label">Required Technical Expertise:</span>
+                    <div className="expertise-chips">
+                      {ai.requiredExpertise.map((exp, idx) => (
+                        <span key={idx} className="expertise-chip">{exp}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p style={{ color: "#64748b", fontSize: "14px", margin: "16px 0 0" }}>
+                Click &quot;Run AI Triage&quot; above to query the FastAPI intelligence engine for automated classification and institutional capability matching.
+              </p>
+            )}
+          </section>
+
+          {/* Quad-Helix Action Hub */}
+          <section className="details-card quad-helix-hub-card">
+            <div className="hub-header">
+              <div>
+                <h2>Quad-Helix Action Hub</h2>
+                <p>Public-Private-Academic partnership actions for this problem</p>
+              </div>
+            </div>
+
+            <div className="hub-grid">
+              {/* 1. Academic R&D Adoption Box */}
+              <div className="hub-action-box university">
+                <div className="hub-box-title">
+                  <GraduationCap size={20} color="#2563eb" />
+                  <h4>Academic R&D Portal</h4>
+                </div>
+
+                {problem.adoption?.isAdopted ? (
+                  <div className="hub-status-active adopted">
+                    <div className="hub-badge-done">✓ Adopted for R&D</div>
+                    <strong className="hub-org-name">{problem.adoption.orgName}</strong>
+                    <p className="hub-desc">
+                      <strong>Lead PI:</strong> {problem.adoption.facultyPi}
+                    </p>
+                    {problem.adoption.studentTeam?.length > 0 && (
+                      <p className="hub-desc">
+                        <strong>Student Team:</strong> {problem.adoption.studentTeam.join(", ")}
+                      </p>
+                    )}
+                    <span className="hub-date">
+                      Adopted on {new Date(problem.adoption.adoptedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="hub-status-open">
+                    <p className="hub-prompt">
+                      Colleges and engineering institutions can adopt this problem for faculty research and final-year student capstone projects.
+                    </p>
+                    <button
+                      type="button"
+                      className="hub-btn university"
+                      onClick={() => setShowAdoptModal(true)}
+                    >
+                      <GraduationCap size={16} />
+                      Adopt Challenge for University R&D
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Industry CSR & Resources Box */}
+              <div className="hub-action-box industry">
+                <div className="hub-box-title">
+                  <Building2 size={20} color="#059669" />
+                  <h4>Industry CSR & Tech Portal</h4>
+                </div>
+
+                {problem.pledges && problem.pledges.length > 0 ? (
+                  <div className="hub-status-active pledged">
+                    <div className="hub-badge-done" style={{ background: "#d1fae5", color: "#047857" }}>
+                      ✓ {problem.pledges.length} CSR Pledge(s) Registered
+                    </div>
+                    {problem.pledges.map((pl, idx) => (
+                      <div key={idx} className="pledge-item">
+                        <strong>{pl.orgName}</strong>
+                        <span>{pl.resourceType} {pl.amount ? `(₹${Number(pl.amount).toLocaleString('en-IN')})` : ''}</span>
+                        <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#475569" }}>
+                          &quot;{pl.pledgeDetails}&quot;
+                        </p>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="hub-btn industry"
+                      style={{ marginTop: "12px" }}
+                      onClick={() => setShowPledgeModal(true)}
+                    >
+                      + Pledge Additional Support
+                    </button>
+                  </div>
+                ) : (
+                  <div className="hub-status-open">
+                    <p className="hub-prompt">
+                      Companies and foundations can pledge CSR funding, specialized testing equipment, or corporate technical mentorship.
+                    </p>
+                    <button
+                      type="button"
+                      className="hub-btn industry"
+                      onClick={() => setShowPledgeModal(true)}
+                    >
+                      <DollarSign size={16} />
+                      Pledge CSR Support / Resources
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </section>
 
           {/* Evidence Files */}
@@ -357,6 +812,172 @@ function ProblemDetails() {
           </section>
         </aside>
       </div>
+
+      {/* 1. Modal: Adopt Challenge for University R&D */}
+      {showAdoptModal && (
+        <div className="modal-backdrop" onClick={() => setShowAdoptModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div className="ai-icon-badge" style={{ background: "#2563eb" }}>
+                  <GraduationCap size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "18px", color: "#1e293b" }}>
+                    Adopt Problem for Academic R&D
+                  </h3>
+                  <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#64748b" }}>
+                    Register as an active Student/Faculty Innovation Lab Project
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="close-modal-btn"
+                onClick={() => setShowAdoptModal(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAdoptSubmit} className="modal-form">
+              <div className="form-group">
+                <label>R&D Project Title *</label>
+                <input
+                  type="text"
+                  value={adoptData.projectTitle}
+                  onChange={(e) => setAdoptData({ ...adoptData, projectTitle: e.target.value })}
+                  placeholder={`R&D: ${problem.title}`}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Faculty Lead / Principal Investigator (PI) *</label>
+                <input
+                  type="text"
+                  value={adoptData.facultyPi}
+                  onChange={(e) => setAdoptData({ ...adoptData, facultyPi: e.target.value })}
+                  placeholder="e.g. Dr. A.K. Sinha (Dept of Hydrology)"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Student Research Team Members (Comma-separated)</label>
+                <input
+                  type="text"
+                  value={adoptData.studentTeam}
+                  onChange={(e) => setAdoptData({ ...adoptData, studentTeam: e.target.value })}
+                  placeholder="e.g. Rahul Verma (B.Tech Mech), Priya Soren (M.Tech Env)"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => setShowAdoptModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={adoptLoading}
+                  className="confirm-btn university"
+                >
+                  <GraduationCap size={16} />
+                  {adoptLoading ? "Confirming Adoption..." : "Confirm R&D Adoption"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Modal: Industry CSR Support / Pledge */}
+      {showPledgeModal && (
+        <div className="modal-backdrop" onClick={() => setShowPledgeModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div className="ai-icon-badge" style={{ background: "#059669" }}>
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "18px", color: "#1e293b" }}>
+                    Pledge Industry CSR & Tech Resources
+                  </h3>
+                  <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#64748b" }}>
+                    Commit grant funding, testing hardware, or technical mentorship
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="close-modal-btn"
+                onClick={() => setShowPledgeModal(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handlePledgeSubmit} className="modal-form">
+              <div className="form-group">
+                <label>Resource / Pledge Type *</label>
+                <select
+                  value={pledgeData.resourceType}
+                  onChange={(e) => setPledgeData({ ...pledgeData, resourceType: e.target.value })}
+                >
+                  <option value="Funding">CSR Grant Funding (₹)</option>
+                  <option value="Equipment/Hardware">Equipment / Testing Kits</option>
+                  <option value="Technical Mentorship">Corporate Engineering Mentorship</option>
+                  <option value="Pilot Testing Site">Industrial Pilot Testing Facility</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Estimated Value / Amount (₹)</label>
+                <input
+                  type="number"
+                  value={pledgeData.amount}
+                  onChange={(e) => setPledgeData({ ...pledgeData, amount: e.target.value })}
+                  placeholder="500000"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Pledge Scope & Specifications *</label>
+                <textarea
+                  rows="3"
+                  value={pledgeData.pledgeDetails}
+                  onChange={(e) => setPledgeData({ ...pledgeData, pledgeDetails: e.target.value })}
+                  placeholder="e.g. Sponsoring 3 community RO filtration kits and pilot field testing support for 6 months."
+                  required
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => setShowPledgeModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={pledgeLoading}
+                  className="confirm-btn industry"
+                >
+                  <DollarSign size={16} />
+                  {pledgeLoading ? "Registering Pledge..." : "Confirm CSR Resource Pledge"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

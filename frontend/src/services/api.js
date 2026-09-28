@@ -114,6 +114,33 @@ export const problemApi = {
       body: formData,
     });
   },
+
+  getAiTriage: async (payload) => {
+    return request('/problems/ai-triage', {
+      method: 'POST',
+      body: payload,
+    });
+  },
+
+  upvote: async (id) => {
+    return request(`/problems/${id}/upvote`, {
+      method: 'POST',
+    });
+  },
+
+  adopt: async (id, payload) => {
+    return request(`/problems/${id}/adopt`, {
+      method: 'POST',
+      body: payload,
+    });
+  },
+
+  pledge: async (id, payload) => {
+    return request(`/problems/${id}/pledge`, {
+      method: 'POST',
+      body: payload,
+    });
+  },
 };
 
 // 3. PRI API

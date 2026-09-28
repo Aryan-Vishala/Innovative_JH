@@ -6,6 +6,10 @@ const {
   getPublicAnalytics,
   getMySubmissions,
   getProblemById,
+  getAiTriage,
+  upvoteProblem,
+  adoptProblem,
+  pledgeProblem,
 } = require('../controllers/problem.controller');
 const { validateProblem } = require('../controllers/pri.controller');
 const { reviewProblem } = require('../controllers/nodal.controller');
@@ -13,11 +17,20 @@ const { protect } = require('../middleware/auth.middleware');
 const { authorizeRoles } = require('../middleware/role.middleware');
 const upload = require('../middleware/upload.middleware');
 
-router.post('/', protect, upload.array('evidenceFiles', 5), createProblem);
+// Public endpoints
+router.post('/ai-triage', getAiTriage);
 router.get('/', getProblems);
 router.get('/public-analytics', getPublicAnalytics);
+
+// Citizen submissions & details
+router.post('/', protect, upload.array('evidenceFiles', 5), createProblem);
 router.get('/my-submissions', protect, getMySubmissions);
 router.get('/:id', getProblemById);
+
+// Quad-Helix Action Hub Endpoints
+router.post('/:id/upvote', protect, upvoteProblem);
+router.post('/:id/adopt', protect, authorizeRoles('participating_hei', 'nodal', 'admin'), adoptProblem);
+router.post('/:id/pledge', protect, authorizeRoles('industry', 'admin'), pledgeProblem);
 
 // Specialized state transition endpoints
 router.patch('/:id/pri-validate', protect, authorizeRoles('pri', 'admin'), validateProblem);

@@ -1,5 +1,6 @@
 const Problem = require('../models/Problem');
 const { generateProblemId } = require('../services/problemIdGenerator');
+const { analyzeProblem } = require('../services/aiTriageService');
 
 // @desc    Submit a new problem (Citizen 4-Step Wizard)
 // @route   POST /api/v1/problems
@@ -61,6 +62,25 @@ const createProblem = async (req, res) => {
       },
     ];
 
+    // Run AI Triage & Matcher (FastAPI microservice or fallback engine)
+    let aiAnalysis = null;
+    try {
+      const triageResult = await analyzeProblem({
+        title,
+        description,
+        category,
+        district,
+      });
+      if (triageResult && triageResult.data) {
+        aiAnalysis = {
+          ...triageResult.data,
+          analyzedAt: new Date(),
+        };
+      }
+    } catch (aiErr) {
+      console.warn('AI Triage processing warning:', aiErr.message);
+    }
+
     const problem = await Problem.create({
       problemId,
       title,
@@ -84,6 +104,7 @@ const createProblem = async (req, res) => {
         frequency,
         citizenReportedSeverity,
       },
+      aiAnalysis,
       status: 'SUBMITTED',
       assignedTo: `${district} Local PRI / ULB`,
       timeline: initialTimeline,
@@ -389,10 +410,196 @@ const getProblemById = async (req, res) => {
   }
 };
 
+// @desc    Live AI Triage & Matcher Preview Endpoint (Called while citizen types)
+// @route   POST /api/v1/problems/ai-triage
+// @access  Public
+const getAiTriage = async (req, res) => {
+  try {
+    const { title, description, category, district } = req.body;
+    if (!title && !description) {
+      return res.status(400).json({ success: false, message: 'Title or description required for AI triage' });
+    }
+    const result = await analyzeProblem({ title, description, category, district });
+    res.status(200).json({
+      success: true,
+      source: result.source,
+      data: result.data,
+    });
+  } catch (error) {
+    console.error('Error in getAiTriage:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Community Upvote ("I Am Also Affected")
+// @route   POST /api/v1/problems/:id/upvote
+// @access  Private (Citizen, Any authenticated user)
+const upvoteProblem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const problem = await Problem.findOne({
+      $or: [{ problemId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
+    });
+
+    if (!problem) {
+      return res.status(404).json({ success: false, message: 'Problem not found' });
+    }
+
+    if (!problem.communityUpvotes) {
+      problem.communityUpvotes = { count: 0, upvotedBy: [] };
+    }
+
+    const userId = req.user._id.toString();
+    const existingIndex = problem.communityUpvotes.upvotedBy.findIndex(
+      (u) => u.toString() === userId
+    );
+
+    let hasUpvoted = false;
+    if (existingIndex > -1) {
+      // Toggle off
+      problem.communityUpvotes.upvotedBy.splice(existingIndex, 1);
+      problem.communityUpvotes.count = Math.max(0, problem.communityUpvotes.count - 1);
+    } else {
+      // Toggle on
+      problem.communityUpvotes.upvotedBy.push(req.user._id);
+      problem.communityUpvotes.count = (problem.communityUpvotes.count || 0) + 1;
+      hasUpvoted = true;
+    }
+
+    await problem.save();
+
+    res.status(200).json({
+      success: true,
+      count: problem.communityUpvotes.count,
+      hasUpvoted,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Adopt Problem for Student R&D / Project (University Portal)
+// @route   POST /api/v1/problems/:id/adopt
+// @access  Private (University / Participating HEI / Nodal / Admin)
+const adoptProblem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { facultyPi, studentTeam = [], projectTitle } = req.body;
+
+    const problem = await Problem.findOne({
+      $or: [{ problemId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
+    });
+
+    if (!problem) {
+      return res.status(404).json({ success: false, message: 'Problem not found' });
+    }
+
+    const orgName = req.user.organizationName || 'University Innovation Lab';
+
+    problem.adoption = {
+      isAdopted: true,
+      adoptedByOrg: req.user.organizationId || null,
+      orgName,
+      facultyPi: facultyPi || req.user.name,
+      studentTeam: Array.isArray(studentTeam) ? studentTeam : [studentTeam],
+      projectTitle: projectTitle || `R&D: ${problem.title}`,
+      adoptedAt: new Date(),
+    };
+
+    problem.solution = {
+      ...problem.solution,
+      universityName: orgName,
+      facultyLead: facultyPi || req.user.name,
+      solutionTitle: projectTitle || `R&D: ${problem.title}`,
+      level: 2, // Level 2: University Adopted
+      levelTag: 'University Adopted',
+    };
+
+    problem.status = 'SOLUTION_IN_PROGRESS';
+    problem.assignedTo = `${orgName} (Faculty Lead: ${facultyPi || req.user.name})`;
+
+    problem.timeline.push({
+      stage: 'SOLUTION_IN_PROGRESS',
+      description: `Adopted by ${orgName} as Student R&D Project "${projectTitle || problem.title}". Faculty PI: ${facultyPi || req.user.name}`,
+      updatedBy: req.user._id,
+      updaterName: req.user.name,
+      timestamp: new Date(),
+    });
+
+    await problem.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Problem adopted successfully for university R&D',
+      data: problem,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Pledge CSR Support / Resources (Industry Portal)
+// @route   POST /api/v1/problems/:id/pledge
+// @access  Private (Industry / Admin)
+const pledgeProblem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { resourceType = 'Funding', pledgeDetails, amount = 0 } = req.body;
+
+    const problem = await Problem.findOne({
+      $or: [{ problemId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
+    });
+
+    if (!problem) {
+      return res.status(404).json({ success: false, message: 'Problem not found' });
+    }
+
+    const orgName = req.user.organizationName || 'Industry Partner';
+
+    const newPledge = {
+      industryOrg: req.user.organizationId || null,
+      orgName,
+      pledgedBy: req.user._id,
+      pledgerName: req.user.name,
+      resourceType,
+      pledgeDetails: pledgeDetails || `${resourceType} support committed`,
+      amount: Number(amount) || 0,
+      pledgedAt: new Date(),
+    };
+
+    if (!problem.pledges) {
+      problem.pledges = [];
+    }
+    problem.pledges.push(newPledge);
+
+    problem.timeline.push({
+      stage: 'INDUSTRY_PLEDGED',
+      description: `Support pledged by ${orgName}: ${resourceType} ${amount ? `(₹${amount})` : ''} - "${pledgeDetails}"`,
+      updatedBy: req.user._id,
+      updaterName: req.user.name,
+      timestamp: new Date(),
+    });
+
+    await problem.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Industry resource pledge registered successfully',
+      data: problem,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createProblem,
   getProblems,
   getPublicAnalytics,
   getMySubmissions,
   getProblemById,
+  getAiTriage,
+  upvoteProblem,
+  adoptProblem,
+  pledgeProblem,
 };
