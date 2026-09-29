@@ -733,6 +733,7 @@ function AuthForm({
         const res = await authApi.login({
           email: formData.email,
           password: formData.password,
+          role,
         });
 
         const userRole = res.user?.primaryRole;

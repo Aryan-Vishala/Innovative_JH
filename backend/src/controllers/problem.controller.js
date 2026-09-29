@@ -1,4 +1,5 @@
 const Problem = require('../models/Problem');
+const Organization = require('../models/Organization');
 const { generateProblemId } = require('../services/problemIdGenerator');
 const { analyzeProblem, generateDecomposedSubProblems } = require('../services/aiTriageService');
 
@@ -203,6 +204,64 @@ const getProblems = async (req, res) => {
 const getPublicAnalytics = async (req, res) => {
   try {
     const totalProblems = await Problem.countDocuments();
+    const [activeProjects, universities, statusAggregation] = await Promise.all([
+      Problem.countDocuments({
+        status: { $in: ['SOLUTION_IN_PROGRESS', 'PROTOTYPE_READY', 'PILOT_TESTING'] },
+      }),
+      Organization.countDocuments({
+        type: { $in: ['nodal_hei', 'participating_hei'] },
+      }),
+      Problem.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const countsByStatus = statusAggregation.reduce((counts, item) => {
+      counts[item._id] = item.count;
+      return counts;
+    }, {});
+    const statusCounts = {
+      submitted: (countsByStatus.SUBMITTED || 0) +
+        (countsByStatus.AI_CLASSIFIED || 0) +
+        (countsByStatus.PRI_VERIFICATION_PENDING || 0),
+      underReview: (countsByStatus.PRI_VERIFIED || 0) +
+        (countsByStatus.NODAL_REVIEWED || 0) +
+        (countsByStatus.MASTER_PROBLEM_CREATED || 0),
+      inProgress: (countsByStatus.SOLUTION_IN_PROGRESS || 0) +
+        (countsByStatus.PROTOTYPE_READY || 0) +
+        (countsByStatus.PILOT_TESTING || 0),
+      resolved: countsByStatus.DEPLOYED || 0,
+      rejected: countsByStatus.REJECTED || 0,
+    };
+
+    const now = new Date();
+    const analyticsWindowStart = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() - 5,
+      1
+    ));
+    const monthlyAggregation = await Problem.aggregate([
+      { $match: { createdAt: { $gte: analyticsWindowStart } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m', date: '$createdAt', timezone: 'UTC' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const monthlyCounts = new Map(monthlyAggregation.map((item) => [item._id, item.count]));
+    const monthlySubmissions = Array.from({ length: 6 }, (_, index) => {
+      const month = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5 + index, 1));
+      const key = `${month.getUTCFullYear()}-${String(month.getUTCMonth() + 1).padStart(2, '0')}`;
+      return {
+        month: month.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }),
+        count: monthlyCounts.get(key) || 0,
+      };
+    });
+
     const verifiedProblems = await Problem.countDocuments({
       status: {
         $in: [
@@ -333,6 +392,9 @@ const getPublicAnalytics = async (req, res) => {
       data: {
         kpis: {
           totalReported: totalProblems,
+          activeProjects,
+          universities,
+          resolved: deployedSolutions,
           verified: verifiedProblems,
           universityAdopted,
           prototypeReady: prototypeCreated,
@@ -340,6 +402,8 @@ const getPublicAnalytics = async (req, res) => {
           deployed: deployedSolutions,
           totalBeneficiaries,
         },
+        statusCounts,
+        monthlySubmissions,
         levels: levelCounts,
         categories: categoryAgg.map((c) => ({
           name: c._id || 'Other',

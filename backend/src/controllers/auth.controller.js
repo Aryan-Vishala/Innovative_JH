@@ -133,6 +133,16 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
+    const portalRoles = {
+      citizen: ['citizen'],
+      government: ['admin', 'pri'],
+      university: ['nodal', 'participating_hei'],
+      industry: ['industry'],
+      admin: ['admin'],
+      pri: ['pri'],
+      nodal: ['nodal'],
+      participating_hei: ['participating_hei'],
+    };
 
     if (!email || !password) {
       return res.status(400).json({
@@ -165,10 +175,14 @@ const login = async (req, res) => {
       });
     }
 
-    if (role && user.primaryRole !== role && user.primaryRole !== 'admin') {
+    const acceptedRoles = typeof role === 'string'
+      ? portalRoles[role.trim().toLowerCase()] || [role.trim().toLowerCase()]
+      : null;
+
+    if (acceptedRoles && !acceptedRoles.includes(user.primaryRole)) {
       return res.status(403).json({
         success: false,
-        message: `Account role mismatch: expected ${role}, user is ${user.primaryRole}`,
+        message: `This account cannot sign in to the ${role} portal`,
       });
     }
 

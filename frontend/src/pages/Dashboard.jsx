@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Search,
   Bell,
@@ -103,12 +103,12 @@ function Dashboard() {
   const categoriesData = analytics?.categories && analytics.categories.length > 0
     ? analytics.categories.slice(0, 6)
     : [
-        { name: "Water", total: 3 },
-        { name: "Agri", total: 2 },
+        { name: "Water Management", total: 3 },
+        { name: "Agriculture", total: 2 },
         { name: "Energy", total: 2 },
-        { name: "Infra", total: 1 },
-        { name: "Health", total: 1 },
-        { name: "Civic", total: 1 },
+        { name: "Urban Infrastructure", total: 2 },
+        { name: "Healthcare", total: 1 },
+        { name: "Environment", total: 1 },
       ];
 
   const maxCategoryTotal = Math.max(...categoriesData.map((c) => c.total || 1), 1);
