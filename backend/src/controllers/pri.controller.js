@@ -2,19 +2,25 @@ const Problem = require('../models/Problem');
 
 // @desc    Get PRI Verification Queue
 // @route   GET /api/v1/pri/queue
-// @access  Private (PRI, Admin)
+// @access  Private (PRI, Admin, Nodal)
 const getPriQueue = async (req, res) => {
   try {
-    const userDistrict = req.user.location?.district;
-    const userBlock = req.user.location?.block;
+    const { district, status, block } = req.query;
+    const filter = {};
 
-    const filter = {
-      status: { $in: ['SUBMITTED', 'PRI_VERIFICATION_PENDING'] },
-    };
+    if (status) {
+      filter.status = status;
+    } else {
+      filter.status = { $in: ['SUBMITTED', 'PRI_VERIFICATION_PENDING', 'PRI_VERIFIED'] };
+    }
 
-    // If PRI user has assigned district, prioritize/filter by district
-    if (userDistrict && userDistrict !== 'All') {
-      filter['location.district'] = new RegExp(userDistrict, 'i');
+    const targetDistrict = district || (req.user?.location?.district && req.user.location.district !== 'All' ? req.user.location.district : null);
+    if (targetDistrict) {
+      filter['location.district'] = new RegExp(targetDistrict, 'i');
+    }
+
+    if (block) {
+      filter['location.block'] = new RegExp(block, 'i');
     }
 
     const queue = await Problem.find(filter)
