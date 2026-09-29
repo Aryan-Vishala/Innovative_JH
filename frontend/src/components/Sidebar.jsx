@@ -1,15 +1,12 @@
 import {
   LayoutDashboard,
   AlertTriangle,
-  GraduationCap,
-  Building2,
-  FolderKanban,
   BarChart3,
-  Bell,
-  Settings,
-  Map,
   LogOut,
   PlusCircle,
+  ShieldCheck,
+  Building2,
+  GraduationCap,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getCurrentUser, authApi } from "../services/api";
@@ -21,10 +18,37 @@ function Sidebar() {
 
   const handleLogout = () => {
     authApi.logout();
-    navigate("/auth");
+    navigate("/auth?mode=login");
   };
 
   const isCitizen = user?.primaryRole === "citizen";
+  const isPri =
+    user?.primaryRole === "pri" ||
+    user?.organizationName?.toLowerCase().includes("panchayat") ||
+    user?.name?.toLowerCase().includes("mukhiya");
+  const isHei =
+    user?.primaryRole === "participating_hei" ||
+    user?.primaryRole === "nodal" ||
+    user?.email?.includes(".edu.in") ||
+    user?.email?.includes(".ac.in");
+
+  const getRoleLabel = () => {
+    if (!user?.primaryRole) return "Government Portal";
+    switch (user.primaryRole) {
+      case "pri":
+        return "Gram Panchayat Mukhiya";
+      case "nodal":
+        return "Nodal HEI Dean";
+      case "participating_hei":
+        return "University R&D Faculty";
+      case "admin":
+        return "District Administration / DC";
+      case "industry":
+        return "Industry CSR Partner";
+      default:
+        return isPri ? "Gram Panchayat Mukhiya" : isHei ? "University Faculty" : "Government Officer";
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -82,7 +106,13 @@ function Sidebar() {
               className={`nav-item ${location.pathname === "/dashboard" ? "active" : ""}`}
             >
               <LayoutDashboard size={19} />
-              <span>State Dashboard</span>
+              <span>
+                {isPri
+                  ? "Mukhiya Ground Desk"
+                  : isHei
+                  ? "University Action Hub"
+                  : "State Governance Command"}
+              </span>
             </Link>
 
             <Link
@@ -94,52 +124,22 @@ function Sidebar() {
             </Link>
 
             <Link
+              to="/citizen/submit-problem"
+              className={`nav-item ${location.pathname === "/citizen/submit-problem" ? "active" : ""}`}
+            >
+              <PlusCircle size={19} />
+              <span>Submit Ground Issue</span>
+            </Link>
+
+            <Link
               to="/"
               className={`nav-item ${location.pathname === "/" ? "active" : ""}`}
             >
               <BarChart3 size={19} />
-              <span>Public Tracker</span>
+              <span>Public Transparency Board</span>
             </Link>
-
-            <a href="#" className="nav-item">
-              <GraduationCap size={19} />
-              <span>Universities</span>
-            </a>
-
-            <a href="#" className="nav-item">
-              <Building2 size={19} />
-              <span>Industry</span>
-            </a>
-
-            <a href="#" className="nav-item">
-              <FolderKanban size={19} />
-              <span>Projects</span>
-            </a>
-
-            <a href="#" className="nav-item">
-              <BarChart3 size={19} />
-              <span>Analytics</span>
-            </a>
-
-            <a href="#" className="nav-item">
-              <Map size={19} />
-              <span>Districts</span>
-            </a>
           </>
         )}
-
-        <p className="nav-label">SYSTEM</p>
-
-        <a href="#" className="nav-item">
-          <Bell size={19} />
-          <span>Notifications</span>
-          <span className="notification-count">3</span>
-        </a>
-
-        <a href="#" className="nav-item">
-          <Settings size={19} />
-          <span>Settings</span>
-        </a>
       </nav>
 
       {/* User */}
@@ -151,15 +151,13 @@ function Sidebar() {
 
           <div className="user-info">
             <strong>{user?.name || "Administrator"}</strong>
-            <span style={{ textTransform: "capitalize" }}>
-              {user?.primaryRole ? `${user.primaryRole} Portal` : "Government Portal"}
-            </span>
+            <span>{getRoleLabel()}</span>
           </div>
         </div>
 
         <button className="logout-btn" onClick={handleLogout} title="Sign out">
           <LogOut size={18} />
-          Logout
+          <span>Sign Out</span>
         </button>
       </div>
     </aside>
