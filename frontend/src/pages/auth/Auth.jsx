@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -122,6 +122,11 @@ function Auth() {
 
   const [role, setRole] = useState(selectedRole || null);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Sync role state when URL parameter changes (e.g. direct link or role switcher)
+  useEffect(() => {
+    setRole(selectedRole || null);
+  }, [selectedRole]);
 
   const isRegister = mode === "register";
 
@@ -479,6 +484,172 @@ function RoleCard({ role, onClick }) {
 
 
 /* =====================================================
+   ROLE SPECIFIC DEMO ACCOUNTS & METADATA
+===================================================== */
+
+const roleSpecificAccounts = {
+  citizen: [
+    {
+      label: "Rahul Kumar",
+      sublabel: "Active Citizen · Kamdara, Gumla",
+      roleBadge: "Citizen",
+      email: "citizen@gumla.in",
+      defaultPassword: "password123",
+      info: "Drinking Water Quality Reporter",
+    },
+    {
+      label: "Rahul Verma",
+      sublabel: "Student Citizen · Morabadi, Ranchi",
+      roleBadge: "Student Citizen",
+      email: "student.rahul@gmail.com",
+      defaultPassword: "password123",
+      info: "Community Upvoter & Tracker",
+    },
+  ],
+  university: [
+    {
+      label: "Dr. A.K. Singh",
+      sublabel: "Dean of R&D · BAU Ranchi",
+      roleBadge: "Nodal HEI Dean",
+      email: "nodal.water@bau.edu.in",
+      defaultPassword: "password123",
+      info: "Water & Agriculture Challenge Nodal Lead",
+    },
+    {
+      label: "Prof. Rajiv Ranjan",
+      sublabel: "HoD Electronics & IoT · BIT Mesra",
+      roleBadge: "Faculty Lead",
+      email: "faculty.bit@bitmesra.ac.in",
+      defaultPassword: "password123",
+      info: "Smart IoT & Sensor Systems Capstone",
+    },
+    {
+      label: "Ananya Mukherjee",
+      sublabel: "Student Innovation Lead · IIT ISM Dhanbad",
+      roleBadge: "Student Innovator",
+      email: "innovator@iitdhanbad.ac.in",
+      defaultPassword: "password123",
+      info: "TRL-3 IoT Water Filter Prototype Team",
+    },
+  ],
+  government: [
+    {
+      label: "Sanjay Oraon",
+      sublabel: "Mukhiya · Kamdara Gram Panchayat",
+      roleBadge: "PRI Mukhiya",
+      email: "pri.kamdara@jharkhand.gov.in",
+      defaultPassword: "password123",
+      info: "Ground Truth & Field Verification Officer",
+    },
+    {
+      label: "Rameshwar Prasad",
+      sublabel: "Municipal Commissioner · Ranchi Municipal Corp",
+      roleBadge: "ULB Officer",
+      email: "ulb.ranchi@jharkhand.gov.in",
+      defaultPassword: "password123",
+      info: "Urban Infrastructure & Sanctions",
+    },
+    {
+      label: "Dr. Sunita Murmu",
+      sublabel: "Secretary · State Innovation Council",
+      roleBadge: "State Admin",
+      email: "admin@jharkhand.gov.in",
+      defaultPassword: "password123",
+      info: "State Nodal Cell & Challenge Governance",
+    },
+    {
+      label: "Pooja Singhal, IAS",
+      sublabel: "Deputy Commissioner · Gumla",
+      roleBadge: "District Collector",
+      email: "dc.gumla@jharkhand.gov.in",
+      defaultPassword: "password123",
+      info: "District Innovation Sanctions & Funding",
+    },
+  ],
+  industry: [
+    {
+      label: "Vikramaditya Sharma",
+      sublabel: "Head of CSR & Sustainability · Tata Steel",
+      roleBadge: "CSR Lead",
+      email: "csr.lead@tatasteel.com",
+      defaultPassword: "password123",
+      info: "₹2.5L Hardware Pledger & Corporate Mentor",
+    },
+    {
+      label: "Amitabh Roy",
+      sublabel: "Managing Director · CleanTech Innovations MSME",
+      roleBadge: "MSME Director",
+      email: "director@cleantech-jh.in",
+      defaultPassword: "password123",
+      info: "Commercial Sensor Pilot & Deployment Partner",
+    },
+  ],
+};
+
+const roleMeta = {
+  citizen: {
+    portalTitle: "Citizen Portal Login",
+    badgeText: "CITIZEN & COMMUNITY LOGIN",
+    subtitle: "Log in to post local community challenges, upvote civic priorities, and monitor verified grassroots solutions in your panchayat.",
+    demoBoxTitle: "Citizen Demo Accounts",
+    demoBoxHint: "Click any verified citizen profile to auto-fill credentials:",
+    emailLabel: "Email or Registered Mobile Number",
+    emailPlaceholder: "e.g. citizen@gumla.in or 9876543210",
+    primaryColor: "#059669",
+    bgColor: "#f0fdf4",
+    borderColor: "#bbf7d0",
+    tagBg: "#dcfce7",
+    tagColor: "#166534",
+    activeRoleIcon: "👤",
+  },
+  university: {
+    portalTitle: "University & HEI Portal Login",
+    badgeText: "ACADEMIC & NODAL HEI LOGIN",
+    subtitle: "Log in for Nodal Deans, Faculty Leads, and Student Innovators to adopt challenges as R&D capstones and advance TRL 1–5 prototypes.",
+    demoBoxTitle: "University & Academic Demo Accounts",
+    demoBoxHint: "Click any faculty, nodal officer, or student profile to auto-fill credentials:",
+    emailLabel: "Institutional / University Email (.edu.in / .ac.in)",
+    emailPlaceholder: "e.g. nodal.water@bau.edu.in or faculty.bit@bitmesra.ac.in",
+    primaryColor: "#2563eb",
+    bgColor: "#eff6ff",
+    borderColor: "#bfdbfe",
+    tagBg: "#dbeafe",
+    tagColor: "#1e40af",
+    activeRoleIcon: "🎓",
+  },
+  government: {
+    portalTitle: "Government & Local Body Login",
+    badgeText: "PRI, ULB & GOVERNMENT LOGIN",
+    subtitle: "Log in for PRI Mukhiyas, Municipal Commissioners, and State Officers to verify ground truth, monitor 24-district impact, and sanction projects.",
+    demoBoxTitle: "Government & Local Body Demo Accounts",
+    demoBoxHint: "Click any administrative profile to auto-fill verified credentials:",
+    emailLabel: "Official Government Email (.gov.in)",
+    emailPlaceholder: "e.g. pri.kamdara@jharkhand.gov.in or admin@jharkhand.gov.in",
+    primaryColor: "#0f766e",
+    bgColor: "#f0fdfa",
+    borderColor: "#99f6e4",
+    tagBg: "#ccfbf1",
+    tagColor: "#115e59",
+    activeRoleIcon: "🏛️",
+  },
+  industry: {
+    portalTitle: "Industry & Corporate Partner Login",
+    badgeText: "INDUSTRY & CSR PARTNERS LOGIN",
+    subtitle: "Log in for Corporate CSR heads, MSMEs, and Investors to pledge funding grants, mentor student teams, and scale pilot innovations.",
+    demoBoxTitle: "Industry & Corporate Demo Accounts",
+    demoBoxHint: "Click any industry partner profile to auto-fill credentials:",
+    emailLabel: "Corporate / Business Email Address",
+    emailPlaceholder: "e.g. csr.lead@tatasteel.com or director@cleantech-jh.in",
+    primaryColor: "#d97706",
+    bgColor: "#fffbeb",
+    borderColor: "#fde68a",
+    tagBg: "#fef3c7",
+    tagColor: "#92400e",
+    activeRoleIcon: "💼",
+  },
+};
+
+/* =====================================================
    LOGIN / REGISTER FORM
 ===================================================== */
 
@@ -493,6 +664,8 @@ function AuthForm({
   const navigate = useNavigate();
   const roleData = roles.find((item) => item.id === role);
   const Icon = roleData ? roleData.icon : UserRound;
+  const meta = roleMeta[role] || roleMeta.citizen;
+  const currentAccounts = roleSpecificAccounts[role] || [];
 
   const [formData, setFormData] = useState({
     name: "",
@@ -516,22 +689,11 @@ function AuthForm({
     if (errorMessage) setErrorMessage("");
   };
 
-  // Demo accounts for instant one-click login
-  const demoAccounts = [
-    { label: "Citizen (Rahul Kumar)", email: "citizen@gumla.in", role: "citizen" },
-    { label: "State Admin (Dr. Sunita Murmu)", email: "admin@jharkhand.gov.in", role: "government" },
-    { label: "PRI Mukhiya (Sanjay Oraon)", email: "pri.kamdara@jharkhand.gov.in", role: "government" },
-    { label: "ULB Municipal (Rameshwar Prasad)", email: "ulb.ranchi@jharkhand.gov.in", role: "government" },
-    { label: "Nodal HEI (Dr. A.K. Singh, BAU)", email: "nodal.water@bau.edu.in", role: "university" },
-    { label: "Industry CSR (Tata Steel Lead)", email: "csr.lead@tatasteel.com", role: "industry" },
-    { label: "MSME (Jharkhand CleanTech)", email: "director@cleantech-jh.in", role: "industry" },
-  ];
-
   const handleQuickFill = (acc) => {
     setFormData((prev) => ({
       ...prev,
       email: acc.email,
-      password: "password123",
+      password: acc.defaultPassword || "password123",
     }));
     setErrorMessage("");
   };
@@ -615,17 +777,17 @@ function AuthForm({
       {/* Heading */}
       <div className="auth-heading">
         <span className="step-label">
-          {isRegister ? "CREATE ACCOUNT" : "SECURE LOGIN"}
+          {isRegister ? "CREATE ACCOUNT" : meta.badgeText}
         </span>
         <h2>
           {isRegister
-            ? `Register as ${roleData.title}`
-            : `${roleData.title} Login`}
+            ? `Register as ${roleData ? roleData.title : "User"}`
+            : meta.portalTitle}
         </h2>
         <p>
           {isRegister
             ? getRegisterDescription(role)
-            : "Enter your registered credentials to access your portal."}
+            : meta.subtitle}
         </p>
       </div>
 
@@ -644,40 +806,143 @@ function AuthForm({
         </div>
       )}
 
-      {/* Quick-Fill Demo Accounts Box for easy testing */}
-      {!isRegister && (
-        <div style={{
-          background: "rgba(16, 185, 129, 0.08)",
-          border: "1px dashed #10b981",
-          borderRadius: "8px",
-          padding: "12px",
-          marginBottom: "18px"
-        }}>
-          <p style={{ fontSize: "12px", fontWeight: "600", color: "#065f46", marginBottom: "8px" }}>
-            ⚡ QUICK DEMO LOGIN (Click any profile to auto-fill password: password123):
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-            {demoAccounts
-              .filter((account) => account.role === role)
-              .map((acc) => (
-              <button
-                key={acc.email}
-                type="button"
-                onClick={() => handleQuickFill(acc)}
-                style={{
-                  fontSize: "11px",
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  background: "#ffffff",
-                  border: "1px solid #a7f3d0",
-                  cursor: "pointer",
-                  color: "#047857",
-                  fontWeight: "500"
-                }}
-              >
-                {acc.label}
-              </button>
-            ))}
+      {/* Quick-Fill Role-Specific Demo Accounts Box */}
+      {!isRegister && currentAccounts.length > 0 && (
+        <div
+          style={{
+            background: meta.bgColor,
+            border: `1px solid ${meta.borderColor}`,
+            borderRadius: "10px",
+            padding: "14px",
+            marginBottom: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "6px",
+              marginBottom: "10px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "700",
+                color: meta.tagColor,
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <span>{meta.activeRoleIcon}</span>
+              <span>{meta.demoBoxTitle}</span>
+            </div>
+            <span
+              style={{
+                fontSize: "11px",
+                color: "#475569",
+                fontWeight: "500",
+                background: "#ffffff",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                border: `1px solid ${meta.borderColor}`,
+              }}
+            >
+              Password: <strong>password123</strong>
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: currentAccounts.length > 1 ? "1fr 1fr" : "1fr",
+              gap: "8px",
+            }}
+          >
+            {currentAccounts.map((acc, idx) => {
+              const isSelected =
+                formData.email.toLowerCase() === acc.email.toLowerCase();
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleQuickFill(acc)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    textAlign: "left",
+                    padding: "9px 12px",
+                    borderRadius: "8px",
+                    background: isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.8)",
+                    border: isSelected
+                      ? `2px solid ${meta.primaryColor}`
+                      : `1px solid ${meta.borderColor}`,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow: isSelected
+                      ? "0 2px 8px rgba(0, 0, 0, 0.08)"
+                      : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      gap: "4px",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "700",
+                        color: "#1e293b",
+                      }}
+                    >
+                      {acc.label}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: "600",
+                        padding: "1px 6px",
+                        borderRadius: "4px",
+                        background: meta.tagBg,
+                        color: meta.tagColor,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {acc.roleBadge}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#64748b",
+                      lineHeight: "1.3",
+                    }}
+                  >
+                    {acc.sublabel}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "10.5px",
+                      color: meta.primaryColor,
+                      fontWeight: "500",
+                      marginTop: "3px",
+                    }}
+                  >
+                    {acc.email}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -753,19 +1018,11 @@ function AuthForm({
 
         {/* Email */}
         <FormField
-          label={
-            role === "citizen"
-              ? "Email or Mobile Number"
-              : "Official Email Address"
-          }
+          label={meta.emailLabel}
           name="email"
           value={formData.email}
           onChange={handleChange}
-          placeholder={
-            role === "citizen"
-              ? "Enter email or mobile number"
-              : "Enter your official email"
-          }
+          placeholder={meta.emailPlaceholder}
           icon={<Mail size={17} />}
         />
 

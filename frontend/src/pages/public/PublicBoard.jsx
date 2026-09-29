@@ -17,6 +17,10 @@ import {
   Calendar,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
+  LayoutDashboard,
+  LogOut,
+  PlusCircle,
   Filter,
   X,
   Activity,
@@ -26,7 +30,7 @@ import {
   BarChart2,
   ExternalLink,
 } from "lucide-react";
-import { problemApi } from "../../services/api";
+import { problemApi, getCurrentUser, authApi } from "../../services/api";
 import JharkhandDistrictMap from "../../components/map/JharkhandDistrictMap";
 import TrlProgressTracker from "../../components/problems/TrlProgressTracker";
 import "./PublicBoard.css";
@@ -258,6 +262,26 @@ const FALLBACK_PROBLEMS = [
 
 function PublicBoard() {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleLogout = () => {
+    authApi.logout();
+    setCurrentUser(null);
+    navigate("/auth");
+  };
+
+  const isCitizen = currentUser?.primaryRole === "citizen";
+  const dashboardPath = isCitizen ? "/citizen" : "/dashboard";
+  const dashboardLabel = isCitizen ? "Citizen Dashboard" : "Dashboard";
 
   // Search & Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -482,6 +506,46 @@ function PublicBoard() {
   return (
     <div className="public-portal">
       {/* =====================================================
+          LOGGED IN CITIZEN / USER SESSION BANNER
+      ===================================================== */}
+      {currentUser && (
+        <aside className="portal-session-banner" aria-label="Active logged in session">
+          <div className="session-user-info">
+            <span className="session-pulse-dot" />
+            <span className="session-badge-pill">ACTIVE SESSION</span>
+            <span>
+              Signed in as <strong>{currentUser.name}</strong>
+              <span className="session-role-tag">
+                {isCitizen ? "Citizen" : currentUser.primaryRole?.replace(/_/g, " ")}
+              </span>
+              {currentUser.location?.district && (
+                <span className="session-district-tag">· {currentUser.location.district}</span>
+              )}
+            </span>
+          </div>
+
+          <div className="session-quick-actions">
+            <Link to={dashboardPath} className="btn-session-return">
+              <ArrowLeft size={15} />
+              <span>Back to {dashboardLabel}</span>
+            </Link>
+
+            {isCitizen && (
+              <Link to="/citizen/submit-problem" className="btn-session-report">
+                <PlusCircle size={14} />
+                <span>Report Problem</span>
+              </Link>
+            )}
+
+            <button type="button" onClick={handleLogout} className="btn-session-logout" title="Sign out of current account">
+              <LogOut size={13} />
+              <span>Logout</span>
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* =====================================================
           STICKY TOP NAVBAR
       ===================================================== */}
       <header className="portal-navbar">
@@ -526,12 +590,44 @@ function PublicBoard() {
           </nav>
 
           <div className="portal-nav-actions">
-            <Link to="/auth?mode=register&role=citizen" className="btn-report">
-              Report a Problem
-            </Link>
-            <Link to="/auth?mode=login" className="btn-login">
-              Portal Login
-            </Link>
+            {currentUser ? (
+              <>
+                <Link
+                  to={dashboardPath}
+                  className="btn-back-dashboard"
+                  title={`Return to your ${dashboardLabel}`}
+                >
+                  <ArrowLeft size={15} />
+                  <span>Back to {isCitizen ? "Citizen Dashboard" : "Dashboard"}</span>
+                </Link>
+
+                {isCitizen && (
+                  <Link to="/citizen/submit-problem" className="btn-report">
+                    + Report Problem
+                  </Link>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="btn-login"
+                  style={{ cursor: "pointer", background: "rgba(255, 255, 255, 0.08)" }}
+                  title="Sign out"
+                >
+                  <LogOut size={14} />
+                  <span>Logout</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth?mode=register&role=citizen" className="btn-report">
+                  Report a Problem
+                </Link>
+                <Link to="/auth?mode=login" className="btn-login">
+                  Portal Login
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -1148,18 +1244,60 @@ function PublicBoard() {
           <div className="footer-col">
             <h4>Quick Links</h4>
             <ul className="footer-links-list">
-              <li>
-                <Link to="/auth?role=citizen">Citizen Problem Submission</Link>
-              </li>
-              <li>
-                <Link to="/auth?role=university">University Innovation Cell</Link>
-              </li>
-              <li>
-                <Link to="/auth?role=government">PRI & Officer Portal</Link>
-              </li>
-              <li>
-                <Link to="/auth?role=industry">Industry & CSR Sponsorship</Link>
-              </li>
+              {currentUser ? (
+                <>
+                  <li>
+                    <Link to={dashboardPath} style={{ fontWeight: 600, color: "#34d399" }}>
+                      ← Return to {dashboardLabel}
+                    </Link>
+                  </li>
+                  {isCitizen && (
+                    <>
+                      <li>
+                        <Link to="/citizen/submit-problem">+ Submit Community Grievance</Link>
+                      </li>
+                      <li>
+                        <Link to="/citizen/my-problems">My Reported Challenges</Link>
+                      </li>
+                    </>
+                  )}
+                  <li>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#f87171",
+                        padding: 0,
+                        cursor: "pointer",
+                        fontSize: "13px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                      }}
+                    >
+                      <LogOut size={13} />
+                      Logout ({currentUser.name})
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link to="/auth?role=citizen">Citizen Problem Submission</Link>
+                  </li>
+                  <li>
+                    <Link to="/auth?role=university">University Innovation Cell</Link>
+                  </li>
+                  <li>
+                    <Link to="/auth?role=government">PRI & Officer Portal</Link>
+                  </li>
+                  <li>
+                    <Link to="/auth?role=industry">Industry & CSR Sponsorship</Link>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 
@@ -1175,6 +1313,18 @@ function PublicBoard() {
           <div>All civic problem data is publicly audited and protected against tampering.</div>
         </div>
       </footer>
+
+      {/* Floating Return to Dashboard Button for convenient navigation when scrolled */}
+      {currentUser && scrolled && (
+        <Link
+          to={dashboardPath}
+          className="floating-return-widget"
+          title={`Return to ${dashboardLabel}`}
+        >
+          <ArrowLeft size={16} />
+          <span>Back to {isCitizen ? "Citizen Dashboard" : "Dashboard"}</span>
+        </Link>
+      )}
     </div>
   );
 }
