@@ -151,7 +151,9 @@ function Sidebar() {
 
           <div className="user-info">
             <strong>{user?.name || "Administrator"}</strong>
-            <span>{getRoleLabel()}</span>
+            <span style={{ textTransform: "capitalize" }}>
+              {user?.primaryRole ? `${user.primaryRole} Portal` : "Government Portal"}
+            </span>
           </div>
         </div>
 
