@@ -571,6 +571,7 @@ function AuthForm({
         const res = await authApi.login({
           email: formData.email,
           password: formData.password,
+          role,
         });
 
         const userRole = res.user?.primaryRole;
@@ -656,9 +657,11 @@ function AuthForm({
             ⚡ QUICK DEMO LOGIN (Click any profile to auto-fill password: password123):
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-            {demoAccounts.map((acc, idx) => (
+            {demoAccounts
+              .filter((account) => account.role === role)
+              .map((acc) => (
               <button
-                key={idx}
+                key={acc.email}
                 type="button"
                 onClick={() => handleQuickFill(acc)}
                 style={{

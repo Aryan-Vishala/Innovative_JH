@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Search,
   Bell,
@@ -8,9 +10,53 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-import ProblemCard from "../components/problems/ProblemCard";
+import { getCurrentUser, problemApi } from "../services/api";
 
 function Dashboard() {
+  const user = getCurrentUser();
+  const displayName = user?.name?.split(" ")[0] || "Admin";
+  const [analytics, setAnalytics] = useState(null);
+  const [recentProblems, setRecentProblems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    Promise.all([
+      problemApi.getPublicAnalytics(),
+      problemApi.getAll({ limit: 5 }),
+    ])
+      .then(([analyticsResponse, problemsResponse]) => {
+        if (!isCurrent) return;
+        setAnalytics(analyticsResponse.data);
+        setRecentProblems(problemsResponse.data || []);
+      })
+      .catch((error) => {
+        if (isCurrent) setErrorMessage(error.message || "Dashboard data could not be loaded.");
+      })
+      .finally(() => {
+        if (isCurrent) setLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
+  const kpis = analytics?.kpis || {};
+  const statusCounts = analytics?.statusCounts || {};
+  const statusTotal = Object.values(statusCounts).reduce((total, count) => total + count, 0);
+  const monthlySubmissions = analytics?.monthlySubmissions || [];
+  const monthlyMaximum = Math.max(...monthlySubmissions.map((month) => month.count), 1);
+  const statusRows = [
+    { label: "Resolved", count: statusCounts.resolved || 0, className: "resolved" },
+    { label: "In Progress", count: statusCounts.inProgress || 0, className: "progress" },
+    { label: "Under Review", count: statusCounts.underReview || 0, className: "review" },
+    { label: "Submitted", count: statusCounts.submitted || 0, className: "submitted" },
+    { label: "Rejected", count: statusCounts.rejected || 0, className: "review" },
+  ];
+
   return (
     <div className="dashboard">
 
@@ -21,7 +67,7 @@ function Dashboard() {
           <p className="eyebrow">GOVERNMENT OF JHARKHAND</p>
 
           <h1>
-            Good morning, Admin <span>👋</span>
+            Good morning, {displayName} <span>👋</span>
           </h1>
 
           <p className="header-description">
@@ -45,47 +91,48 @@ function Dashboard() {
           </button>
 
           <div className="header-avatar">
-            A
+            {displayName.charAt(0).toUpperCase()}
           </div>
 
         </div>
 
       </header>
 
+      {errorMessage && (
+        <p className="dashboard-data-error" role="alert">
+          Dashboard data could not be loaded: {errorMessage}
+        </p>
+      )}
 
       {/* Statistics */}
       <section className="stats-grid">
 
         <StatCard
           title="Total Challenges"
-          value="1,248"
-          change="+12.4%"
+          value={loading ? "..." : formatCount(kpis.totalReported)}
           icon={<AlertTriangle size={21} />}
-          description="vs. last month"
+          description="Reported challenges"
         />
 
         <StatCard
           title="Active Projects"
-          value="342"
-          change="+8.2%"
+          value={loading ? "..." : formatCount(kpis.activeProjects)}
           icon={<FolderKanban size={21} />}
-          description="currently in progress"
+          description="In delivery or testing"
         />
 
         <StatCard
           title="Universities"
-          value="87"
-          change="+5.6%"
+          value={loading ? "..." : formatCount(kpis.universities)}
           icon={<GraduationCap size={21} />}
-          description="participating institutions"
+          description="Registered HEI organizations"
         />
 
         <StatCard
           title="Resolved"
-          value="624"
-          change="+18.7%"
+          value={loading ? "..." : formatCount(kpis.resolved)}
           icon={<CheckCircle2 size={21} />}
-          description="challenges addressed"
+          description="Deployed solutions"
         />
 
       </section>
@@ -99,34 +146,31 @@ function Dashboard() {
           <div className="card-header">
             <div>
               <h2>Challenges Overview</h2>
-              <p>Problems submitted over the last 6 months</p>
+              <p>Challenges submitted over the last 6 months</p>
             </div>
 
-            <select>
-              <option>Last 6 months</option>
-              <option>Last 30 days</option>
-              <option>This year</option>
-            </select>
+            <span>Last 6 months</span>
           </div>
 
           <div className="chart-placeholder">
             <div className="chart-bars">
-              <div style={{ height: "45%" }}></div>
-              <div style={{ height: "60%" }}></div>
-              <div style={{ height: "52%" }}></div>
-              <div style={{ height: "72%" }}></div>
-              <div style={{ height: "68%" }}></div>
-              <div style={{ height: "90%" }}></div>
+              {monthlySubmissions.map((month) => (
+                <div
+                  key={month.month}
+                  title={`${month.count} challenges`}
+                  style={{ height: `${month.count ? Math.max((month.count / monthlyMaximum) * 100, 4) : 0}%` }}
+                />
+              ))}
             </div>
 
             <div className="chart-labels">
-              <span>Apr</span>
-              <span>May</span>
-              <span>Jun</span>
-              <span>Jul</span>
-              <span>Aug</span>
-              <span>Sep</span>
+              {monthlySubmissions.map((month) => (
+                <span key={month.month}>{month.month}</span>
+              ))}
             </div>
+            {!loading && monthlySubmissions.every((month) => month.count === 0) && (
+              <p>No submissions in this period.</p>
+            )}
           </div>
 
         </div>
@@ -142,52 +186,20 @@ function Dashboard() {
           </div>
 
           <div className="status-list">
-
-            <StatusRow
-              label="Resolved"
-              value="624"
-              percentage="50%"
-              className="resolved"
-            />
-
-            <StatusRow
-              label="In Progress"
-              value="342"
-              percentage="27%"
-              className="progress"
-            />
-
-            <StatusRow
-              label="Under Review"
-              value="187"
-              percentage="15%"
-              className="review"
-            />
-
-            <StatusRow
-              label="Submitted"
-              value="95"
-              percentage="8%"
-              className="submitted"
-            />
-
+            {statusRows.map((row) => (
+              <StatusRow
+                key={row.label}
+                label={row.label}
+                value={formatCount(row.count)}
+                percentage={statusTotal ? Math.round((row.count / statusTotal) * 100) : 0}
+                className={row.className}
+              />
+            ))}
           </div>
 
         </div>
 
       </section>
-
-      <ProblemCard
-        title="Non-functional street lights"
-        description="Several street lights are not working in the residential area, creating safety concerns for citizens."
-        category="Urban Infrastructure"
-        district="Ranchi"
-        status="In Progress"
-        priority="High"
-        submittedBy="Citizen"
-        date="08 Sep 2026"
-        onViewDetails={() => alert("Opening problem details")}
-      />
 
       {/* Recent Problems */}
 
@@ -200,10 +212,10 @@ function Dashboard() {
             <p>Latest problems submitted by citizens</p>
           </div>
 
-          <button className="view-all">
+          <Link className="view-all" to="/tracker">
             View all
             <ArrowUpRight size={15} />
-          </button>
+          </Link>
 
         </div>
 
@@ -222,76 +234,33 @@ function Dashboard() {
             </thead>
 
             <tbody>
-
-              <tr>
-                <td>
-                  <strong>Non-functional street lights</strong>
-                  <span>#IJ-10248</span>
-                </td>
-
-                <td>Ranchi</td>
-
-                <td>Urban Infrastructure</td>
-
-                <td>
-                  <span className="status-badge progress-badge">
-                    In Progress
-                  </span>
-                </td>
-
-                <td>
-                  <span className="priority high">
-                    High
-                  </span>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <strong>Water supply disruption</strong>
-                  <span>#IJ-10247</span>
-                </td>
-
-                <td>Dhanbad</td>
-
-                <td>Water Management</td>
-
-                <td>
-                  <span className="status-badge review-badge">
-                    Under Review
-                  </span>
-                </td>
-
-                <td>
-                  <span className="priority medium">
-                    Medium
-                  </span>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <strong>Waste management issue</strong>
-                  <span>#IJ-10246</span>
-                </td>
-
-                <td>Jamshedpur</td>
-
-                <td>Environment</td>
-
-                <td>
-                  <span className="status-badge resolved-badge">
-                    Resolved
-                  </span>
-                </td>
-
-                <td>
-                  <span className="priority low">
-                    Low
-                  </span>
-                </td>
-              </tr>
-
+              {loading ? (
+                <tr><td colSpan="5">Loading recent challenges...</td></tr>
+              ) : recentProblems.length === 0 ? (
+                <tr><td colSpan="5">No challenges have been reported yet.</td></tr>
+              ) : recentProblems.map((problem) => {
+                const severity = problem.impact?.citizenReportedSeverity || "Medium";
+                return (
+                  <tr key={problem._id}>
+                    <td>
+                      <strong>{problem.title}</strong>
+                      <span>{problem.problemId}</span>
+                    </td>
+                    <td>{problem.location?.district || "-"}</td>
+                    <td>{problem.category}</td>
+                    <td>
+                      <span className={`status-badge ${getStatusBadgeClass(problem.status)}`}>
+                        {formatStatus(problem.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`priority ${severity.toLowerCase() === "critical" ? "high" : severity.toLowerCase()}`}>
+                        {severity}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
 
           </table>
@@ -304,6 +273,25 @@ function Dashboard() {
   );
 }
 
+function formatCount(value) {
+  return Number.isFinite(value) ? value.toLocaleString() : "--";
+}
+
+function formatStatus(status = "") {
+  return status
+    .split("_")
+    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function getStatusBadgeClass(status) {
+  if (status === "DEPLOYED") return "resolved-badge";
+  if (["SOLUTION_IN_PROGRESS", "PROTOTYPE_READY", "PILOT_TESTING"].includes(status)) {
+    return "progress-badge";
+  }
+  return "review-badge";
+}
+
 
 /* =========================
    STAT CARD
@@ -312,7 +300,6 @@ function Dashboard() {
 function StatCard({
   title,
   value,
-  change,
   icon,
   description,
 }) {
@@ -324,10 +311,6 @@ function StatCard({
         <div className="stat-icon">
           {icon}
         </div>
-
-        <span className="stat-change">
-          {change}
-        </span>
 
       </div>
 
@@ -373,12 +356,12 @@ function StatusRow({
       <div className="status-bar">
         <div
           className={`status-fill ${className}`}
-          style={{ width: percentage }}
+          style={{ width: `${percentage}%` }}
         />
       </div>
 
       <span className="percentage">
-        {percentage}
+        {percentage}%
       </span>
 
     </div>
