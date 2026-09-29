@@ -1,6 +1,6 @@
 const Problem = require('../models/Problem');
 const { generateProblemId } = require('../services/problemIdGenerator');
-const { analyzeProblem } = require('../services/aiTriageService');
+const { analyzeProblem, generateDecomposedSubProblems } = require('../services/aiTriageService');
 
 // @desc    Submit a new problem (Citizen 4-Step Wizard)
 // @route   POST /api/v1/problems
@@ -105,6 +105,7 @@ const createProblem = async (req, res) => {
         citizenReportedSeverity,
       },
       aiAnalysis,
+      decomposedSubProblems: aiAnalysis?.decomposedSubProblems || generateDecomposedSubProblems({ title, description, category, district }),
       status: 'SUBMITTED',
       assignedTo: `${district} Local PRI / ULB`,
       timeline: initialTimeline,
@@ -401,6 +402,17 @@ const getProblemById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Problem not found' });
     }
 
+    // Auto-generate AI decomposed sub-problems if not yet present
+    if (!problem.decomposedSubProblems || problem.decomposedSubProblems.length === 0) {
+      problem.decomposedSubProblems = generateDecomposedSubProblems({
+        title: problem.title,
+        description: problem.description,
+        category: problem.category,
+        district: problem.location?.district || 'Ranchi',
+      });
+      await problem.save().catch((err) => console.warn('Sub-problem auto-save note:', err.message));
+    }
+
     res.status(200).json({
       success: true,
       data: problem,
@@ -592,6 +604,98 @@ const pledgeProblem = async (req, res) => {
   }
 };
 
+// @desc    Update / Re-assign a decomposed sub-problem to an HEI or department
+// @route   PATCH /api/v1/problems/:id/subproblems/:subProblemId
+// @access  Private
+const updateSubProblem = async (req, res) => {
+  try {
+    const { id, subProblemId } = req.params;
+    const {
+      title,
+      scopeDescription,
+      targetHEI,
+      targetDepartment,
+      deliverable,
+      requiredSkills,
+      estimatedTimeframe,
+      status,
+      modifiedNotes,
+      isSelfAssigned,
+    } = req.body;
+
+    let problem;
+    if (id.startsWith('JH-')) {
+      problem = await Problem.findOne({ problemId: id });
+    } else {
+      problem = await Problem.findById(id);
+    }
+
+    if (!problem) {
+      return res.status(404).json({ success: false, message: 'Problem not found' });
+    }
+
+    // Ensure sub-problems exist
+    if (!problem.decomposedSubProblems || problem.decomposedSubProblems.length === 0) {
+      problem.decomposedSubProblems = generateDecomposedSubProblems({
+        title: problem.title,
+        description: problem.description,
+        category: problem.category,
+        district: problem.location?.district || 'Ranchi',
+      });
+    }
+
+    let subProblem = problem.decomposedSubProblems.find(
+      (sp) => sp.subProblemId === subProblemId || sp._id?.toString() === subProblemId
+    );
+
+    if (!subProblem) {
+      return res.status(404).json({ success: false, message: 'Sub-problem not found' });
+    }
+
+    if (title) subProblem.title = title;
+    if (scopeDescription) subProblem.scopeDescription = scopeDescription;
+    if (targetHEI) subProblem.targetHEI = targetHEI;
+    if (targetDepartment) subProblem.targetDepartment = targetDepartment;
+    if (deliverable) subProblem.deliverable = deliverable;
+    if (requiredSkills && Array.isArray(requiredSkills)) subProblem.requiredSkills = requiredSkills;
+    if (estimatedTimeframe) subProblem.estimatedTimeframe = estimatedTimeframe;
+    if (status) subProblem.status = status;
+    else subProblem.status = isSelfAssigned ? 'ACCEPTED' : 'MODIFIED';
+
+    subProblem.assignedTo = {
+      userName: req.user.name,
+      userEmail: req.user.email,
+      organizationName: targetHEI || req.user.organizationName || 'Assigned Institution',
+      assignedAt: new Date(),
+      isSelfAssigned: Boolean(isSelfAssigned),
+      modifiedNotes:
+        modifiedNotes ||
+        (isSelfAssigned
+          ? `Self-assigned by ${req.user.name} for ${targetHEI || 'Institution'}`
+          : `Modified & re-assigned by ${req.user.name}`),
+    };
+
+    problem.timeline.push({
+      stage: 'SUB_PROBLEM_REASSIGNED',
+      description: `Sub-problem "${subProblem.title}" re-assigned to ${subProblem.targetHEI} (${subProblem.targetDepartment}) by ${req.user.name}`,
+      updatedBy: req.user._id,
+      updaterName: req.user.name,
+      timestamp: new Date(),
+    });
+
+    await problem.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Sub-problem scope updated and re-assigned successfully',
+      data: problem,
+    });
+  } catch (error) {
+    console.error('Error updating sub-problem:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createProblem,
   getProblems,
@@ -602,4 +706,5 @@ module.exports = {
   upvoteProblem,
   adoptProblem,
   pledgeProblem,
+  updateSubProblem,
 };

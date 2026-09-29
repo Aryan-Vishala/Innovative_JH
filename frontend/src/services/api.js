@@ -141,6 +141,13 @@ export const problemApi = {
       body: payload,
     });
   },
+
+  updateSubProblem: async (problemId, subProblemId, payload) => {
+    return request(`/problems/${problemId}/subproblems/${subProblemId}`, {
+      method: 'PATCH',
+      body: payload,
+    });
+  },
 };
 
 // 3. PRI API

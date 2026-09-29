@@ -10,6 +10,7 @@ const {
   upvoteProblem,
   adoptProblem,
   pledgeProblem,
+  updateSubProblem,
 } = require('../controllers/problem.controller');
 const { validateProblem } = require('../controllers/pri.controller');
 const { reviewProblem } = require('../controllers/nodal.controller');
@@ -31,6 +32,9 @@ router.get('/:id', getProblemById);
 router.post('/:id/upvote', protect, upvoteProblem);
 router.post('/:id/adopt', protect, authorizeRoles('participating_hei', 'nodal', 'admin', 'citizen', 'pri', 'industry'), adoptProblem);
 router.post('/:id/pledge', protect, authorizeRoles('industry', 'admin', 'citizen', 'participating_hei', 'pri'), pledgeProblem);
+
+// AI Modular Decomposition & Sub-Problem Reassignment Endpoint
+router.patch('/:id/subproblems/:subProblemId', protect, updateSubProblem);
 
 // Specialized state transition endpoints
 router.patch('/:id/pri-validate', protect, authorizeRoles('pri', 'admin', 'citizen', 'participating_hei', 'industry'), validateProblem);

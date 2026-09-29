@@ -719,4 +719,120 @@
 
 .pitch-demo-click-btn:hover {
   background: #1d4ed8;
+}
+
+/* AI Multi-Track Problem Decomposition Preview */
+.ai-decomposition-preview {
+  margin-top: 18px;
+  background: #ffffff;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.05);
+}
+
+.decomposition-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.preview-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #1e1b4b;
+}
+
+.dispatch-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.preview-note {
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.45;
+  margin: 0 0 14px 0;
+}
+
+.preview-tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.preview-track-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preview-track-item.track-hei {
+  border-top: 3px solid #4f46e5;
+  background: #fdfefe;
+}
+
+.preview-track-item.track-tech {
+  border-top: 3px solid #06b6d4;
+  background: #fdfefe;
+}
+
+.preview-track-item.track-govt {
+  border-top: 3px solid #10b981;
+  background: #fdfefe;
+}
+
+.track-item-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.track-hei .track-item-header {
+  color: #4338ca;
+}
+
+.track-tech .track-item-header {
+  color: #0e7490;
+}
+
+.track-govt .track-item-header {
+  color: #047857;
+}
+
+.preview-track-item strong {
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.preview-track-item .track-dept {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.preview-track-item .track-scope {
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.4;
+  margin: 0;
 }

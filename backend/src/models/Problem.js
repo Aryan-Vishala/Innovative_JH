@@ -16,6 +16,36 @@ const timelineSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 });
 
+const subProblemSchema = new mongoose.Schema({
+  subProblemId: { type: String, required: true },
+  title: { type: String, required: true },
+  track: {
+    type: String,
+    enum: ['HEI_RESEARCH', 'GOVERNMENT_INFRASTRUCTURE', 'SOFTWARE_TECH', 'COMMUNITY_HEALTH', 'OTHER'],
+    default: 'HEI_RESEARCH',
+  },
+  assignedRole: { type: String, default: 'participating_hei' },
+  targetHEI: { type: String, default: 'Birsa Agricultural University (BAU)' },
+  targetDepartment: { type: String, default: 'Dept of Chemical Engineering' },
+  scopeDescription: { type: String, default: '' },
+  deliverable: { type: String, default: '' },
+  requiredSkills: [{ type: String }],
+  estimatedTimeframe: { type: String, default: '8-12 Weeks' },
+  status: {
+    type: String,
+    enum: ['PROPOSED', 'ACCEPTED', 'MODIFIED', 'REASSIGNED', 'IN_PROGRESS', 'COMPLETED'],
+    default: 'PROPOSED',
+  },
+  assignedTo: {
+    userName: { type: String, default: '' },
+    userEmail: { type: String, default: '' },
+    organizationName: { type: String, default: '' },
+    assignedAt: { type: Date, default: null },
+    isSelfAssigned: { type: Boolean, default: false },
+    modifiedNotes: { type: String, default: '' },
+  },
+});
+
 const problemSchema = new mongoose.Schema(
   {
     problemId: {
@@ -206,6 +236,7 @@ const problemSchema = new mongoose.Schema(
         pledgedAt: { type: Date, default: Date.now },
       },
     ],
+    decomposedSubProblems: [subProblemSchema],
     timeline: [timelineSchema],
   },
   {

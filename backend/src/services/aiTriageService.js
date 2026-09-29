@@ -183,6 +183,320 @@ const fallbackTriageEngine = (title = '', description = '', category = '', distr
 };
 
 /**
+ * AI Problem Decomposition Engine
+ * Breaks down complex ground challenges into:
+ * 1. HEI_RESEARCH: Assigned to specialized University / Academic Department (e.g. BAU, BIT Mesra, IIT ISM)
+ * 2. SOFTWARE_TECH: Assigned to Software / IoT telemetry engineering lab
+ * 3. GOVERNMENT_INFRASTRUCTURE: Assigned to PRI / ULB / District Admin for civil works & procurement
+ */
+const generateDecomposedSubProblems = ({ title = '', description = '', category = '', district = 'Ranchi' }) => {
+  const text = `${title} ${description} ${category}`.toLowerCase();
+
+  // 1. Water Quality / Contamination
+  if (
+    text.includes('water') ||
+    text.includes('fluoride') ||
+    text.includes('rust') ||
+    text.includes('arsenic') ||
+    text.includes('borewell') ||
+    text.includes('drinking')
+  ) {
+    return [
+      {
+        subProblemId: 'SP-HEI-01',
+        title: 'Decentralized Chemical Adsorption & Fluoride/Heavy Metal Filtration Unit',
+        track: 'HEI_RESEARCH',
+        assignedRole: 'participating_hei',
+        targetHEI: 'Birsa Agricultural University (BAU) / BIT Mesra',
+        targetDepartment: 'Dept of Hydrology & Chemical Engineering',
+        scopeDescription:
+          'Synthesize low-cost activated alumina and charcoal adsorption columns capable of off-grid filtration (4,000 L/day) reducing fluoride to < 0.5 PPM per BIS 10500 standards.',
+        deliverable: 'TRL-3 Working Filter Core Prototype + Chemical Efficacy Audit Report',
+        requiredSkills: ['Water Chemistry', 'Adsorption Kinetics', 'Filter Column Design'],
+        estimatedTimeframe: '8-10 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'Dr. A.K. Singh',
+          userEmail: 'nodal.water@bau.edu.in',
+          organizationName: 'Birsa Agricultural University (BAU)',
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Recommended based on active BAU Water Quality Lab capability',
+        },
+      },
+      {
+        subProblemId: 'SP-TECH-02',
+        title: 'Solar IoT Telemetry Node & Real-Time Water Quality Monitoring Dashboard',
+        track: 'SOFTWARE_TECH',
+        assignedRole: 'participating_hei',
+        targetHEI: 'IIT (ISM) Dhanbad / BIT Mesra',
+        targetDepartment: 'Dept of Electronics & Computer Science',
+        scopeDescription:
+          'Design an off-grid solar-powered telemetry box with inline TDS, pH, and Turbidity optical probes, pushing 15-minute readings to the State Public Transparency Board with automated SMS alerts.',
+        deliverable: 'Enclosed ESP32/LoRa Hardware Node + Cloud Telemetry Stream API',
+        requiredSkills: ['IoT Firmware', 'Embedded C', 'LoRaWAN Telemetry', 'Cloud APIs'],
+        estimatedTimeframe: '6-8 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'Prof. Rajiv Ranjan',
+          userEmail: 'faculty.bit@bitmesra.ac.in',
+          organizationName: 'BIT Mesra',
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Recommended based on BIT Mesra IoT & Embedded Systems Lab',
+        },
+      },
+      {
+        subProblemId: 'SP-GOVT-03',
+        title: 'Supply Line Pressure Testing, Well Sanitization & Community Storage Cistern',
+        track: 'GOVERNMENT_INFRASTRUCTURE',
+        assignedRole: 'government',
+        targetHEI: `${district || 'Gumla'} District Water & Sanitation Mission`,
+        targetDepartment: 'Panchayati Raj Civil Engineering Wing',
+        scopeDescription:
+          'Perform physical on-site pressure inspection of all community borewells, replace corroded riser pipelines, construct a reinforced concrete foundation, and install a 5,000L food-grade storage reservoir.',
+        deliverable: 'Site Civil Readiness Clearance + Completed Physical Pipeline Overhaul',
+        requiredSkills: ['Civil Piping Inspection', 'Tender Procurement', 'Panchayat Verification'],
+        estimatedTimeframe: '4-6 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'Sanjay Oraon (Mukhiya)',
+          userEmail: 'pri.kamdara@jharkhand.gov.in',
+          organizationName: 'Kamdara Gram Panchayat',
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Assigned to Local PRI for ground execution',
+        },
+      },
+    ];
+  }
+
+  // 2. Agriculture / Irrigation / Soil
+  if (
+    text.includes('soil') ||
+    text.includes('crop') ||
+    text.includes('irrigation') ||
+    text.includes('canal') ||
+    text.includes('farmer') ||
+    text.includes('drought')
+  ) {
+    return [
+      {
+        subProblemId: 'SP-HEI-01',
+        title: 'Micro-Sediment Trap & Bio-Enzymatic De-Siltation for Check-Dams',
+        track: 'HEI_RESEARCH',
+        assignedRole: 'participating_hei',
+        targetHEI: 'Birsa Agricultural University (BAU)',
+        targetDepartment: 'Faculty of Agricultural Engineering & Agronomy',
+        scopeDescription:
+          'Design biological silt catchment barriers and field-test bio-enzymes to digest organic sedimentation without eroding earthen canal banks.',
+        deliverable: 'Tested Silt Trap Blueprints + Field Efficacy Validation Report',
+        requiredSkills: ['Agronomy', 'Soil Mechanics', 'Sediment Traps'],
+        estimatedTimeframe: '8-10 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'Dr. A.K. Singh',
+          userEmail: 'nodal.water@bau.edu.in',
+          organizationName: 'Birsa Agricultural University (BAU)',
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Recommended based on BAU Agronomy research',
+        },
+      },
+      {
+        subProblemId: 'SP-TECH-02',
+        title: 'Drone & Satellite NDVI Soil Moisture Mapping & Farmer Advisory Portal',
+        track: 'SOFTWARE_TECH',
+        assignedRole: 'participating_hei',
+        targetHEI: 'IIT (ISM) Dhanbad',
+        targetDepartment: 'Dept of Environmental Engineering & Geoinformatics',
+        scopeDescription:
+          'Develop automated GIS satellite processing to track weekly soil moisture levels across rainfed farm plots and push vernacular SMS advisory to farmers.',
+        deliverable: 'GIS Soil Moisture Dashboard + Automated Twilio/SMS Dispatcher',
+        requiredSkills: ['GIS Analysis', 'Satellite NDVI', 'Python Geospatial', 'Web Portals'],
+        estimatedTimeframe: '6-8 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'Ananya Mukherjee',
+          userEmail: 'innovator@iitdhanbad.ac.in',
+          organizationName: 'IIT ISM Dhanbad',
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Recommended for Geoinformatics team',
+        },
+      },
+      {
+        subProblemId: 'SP-GOVT-03',
+        title: 'Canal Desiltation Work Order & Sluice Gate Mechanical Replacement',
+        track: 'GOVERNMENT_INFRASTRUCTURE',
+        assignedRole: 'government',
+        targetHEI: `${district || 'District'} Irrigation Division`,
+        targetDepartment: 'District Minor Irrigation Office',
+        scopeDescription:
+          'Execute administrative tendering for mechanical earth excavation along 3.5 km irrigation canal branch, replace rusty sluice gates, and establish village water user committee.',
+        deliverable: 'Excavation Completion Certificate + Functional Sluice Gates',
+        requiredSkills: ['Canal Hydraulics', 'Civil Contracting', 'Community Water Associations'],
+        estimatedTimeframe: '4-6 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'District Collector Office',
+          userEmail: 'admin@jharkhand.gov.in',
+          organizationName: `${district || 'District'} Administration`,
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Assigned to District Irrigation Division',
+        },
+      },
+    ];
+  }
+
+  // 3. Renewable Energy / Solar / Power
+  if (
+    text.includes('solar') ||
+    text.includes('electricity') ||
+    text.includes('power') ||
+    text.includes('battery') ||
+    text.includes('grid')
+  ) {
+    return [
+      {
+        subProblemId: 'SP-HEI-01',
+        title: 'High-Efficiency MPPT Solar Inverter & Solid-State Battery Storage Unit',
+        track: 'HEI_RESEARCH',
+        assignedRole: 'participating_hei',
+        targetHEI: 'National Institute of Technology (NIT) Jamshedpur',
+        targetDepartment: 'Dept of Electrical & Electronics Engineering',
+        scopeDescription:
+          'Build a robust, surge-protected 5kW decentralized solar hybrid inverter optimized for rural intermittent voltage fluctuations with thermal heat dissipation.',
+        deliverable: 'Working 5kW MPPT Inverter Hardware Prototype + Efficiency Benchmarks',
+        requiredSkills: ['Power Electronics', 'MPPT Controllers', 'Battery Thermal Management'],
+        estimatedTimeframe: '8-10 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'Prof. Rajiv Ranjan',
+          userEmail: 'faculty.bit@bitmesra.ac.in',
+          organizationName: 'BIT Mesra / NIT Jamshedpur',
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Recommended for Electrical Engineering Lab',
+        },
+      },
+      {
+        subProblemId: 'SP-TECH-02',
+        title: 'Micro-Grid Automated Load Shedding & Tamper Detection Telemetry',
+        track: 'SOFTWARE_TECH',
+        assignedRole: 'participating_hei',
+        targetHEI: 'BIT Mesra, Ranchi',
+        targetDepartment: 'Dept of Computer Science & Automation',
+        scopeDescription:
+          'Implement edge microcontroller code to monitor phase load imbalances, detect power theft/line tampering, and dynamically balance battery discharge cycles.',
+        deliverable: 'Edge Firmware + Cloud Energy Metrics Dashboard',
+        requiredSkills: ['Smart Metering', 'Edge Computing', 'Time-Series DB'],
+        estimatedTimeframe: '6-8 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'Ananya Mukherjee',
+          userEmail: 'innovator@iitdhanbad.ac.in',
+          organizationName: 'IIT ISM Dhanbad',
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Recommended for Embedded Systems team',
+        },
+      },
+      {
+        subProblemId: 'SP-GOVT-03',
+        title: 'Poles Structural Foundation, Wiring Rigging & JREDA Subsidy Sanction',
+        track: 'GOVERNMENT_INFRASTRUCTURE',
+        assignedRole: 'government',
+        targetHEI: 'Jharkhand Renewable Energy Development Agency (JREDA)',
+        targetDepartment: 'District Energy Supply Cell',
+        scopeDescription:
+          'Erect wind-resistant galvanized solar mounting poles, lay underground armored cabling to 80 households, and sanction state renewable subsidies.',
+        deliverable: 'Grid Connection Clearance + JREDA Subsidy Sanction Order',
+        requiredSkills: ['Electrical Line Layout', 'Safety Certification', 'Govt Energy Schemes'],
+        estimatedTimeframe: '4-6 Weeks',
+        status: 'PROPOSED',
+        assignedTo: {
+          userName: 'Dr. Sunita Murmu',
+          userEmail: 'admin@jharkhand.gov.in',
+          organizationName: 'State Innovation Council',
+          assignedAt: new Date(),
+          isSelfAssigned: false,
+          modifiedNotes: 'AI Assigned to State Energy Agency',
+        },
+      },
+    ];
+  }
+
+  // 4. Default Fallback Decomposition for any other domain
+  return [
+    {
+      subProblemId: 'SP-HEI-01',
+      title: `Applied Engineering & Prototyping Module: ${title.slice(0, 45)}`,
+      track: 'HEI_RESEARCH',
+      assignedRole: 'participating_hei',
+      targetHEI: 'Birla Institute of Technology (BIT Mesra)',
+      targetDepartment: 'Department of Applied Engineering & Innovation',
+      scopeDescription: `Analyze root mechanical/scientific causes of ${title.toLowerCase()} and fabricate a low-cost, resilient prototype solving the localized challenge in ${district}.`,
+      deliverable: 'TRL 1–3 Validated Functional Prototype + Engineering Dossier',
+      requiredSkills: ['Applied Engineering', 'Rapid Prototyping', 'Field Testing'],
+      estimatedTimeframe: '8-12 Weeks',
+      status: 'PROPOSED',
+      assignedTo: {
+        userName: 'Prof. Rajiv Ranjan',
+        userEmail: 'faculty.bit@bitmesra.ac.in',
+        organizationName: 'BIT Mesra, Ranchi',
+        assignedAt: new Date(),
+        isSelfAssigned: false,
+        modifiedNotes: 'AI Recommended for Academic Innovation Cell',
+      },
+    },
+    {
+      subProblemId: 'SP-TECH-02',
+      title: `Digital Monitoring, Telemetry & Citizen Feedback App`,
+      track: 'SOFTWARE_TECH',
+      assignedRole: 'participating_hei',
+      targetHEI: 'IIT (ISM) Dhanbad',
+      targetDepartment: 'Computer Science & Engineering Lab',
+      scopeDescription: `Build a real-time tracking interface and mobile grievance feedback component to give citizens transparent status updates on the intervention.`,
+      deliverable: 'Functional Web/Mobile Telemetry Service + API Integration',
+      requiredSkills: ['Web Architecture', 'REST APIs', 'Mobile Responsive UI'],
+      estimatedTimeframe: '6-8 Weeks',
+      status: 'PROPOSED',
+      assignedTo: {
+        userName: 'Ananya Mukherjee',
+        userEmail: 'innovator@iitdhanbad.ac.in',
+        organizationName: 'IIT ISM Dhanbad',
+        assignedAt: new Date(),
+        isSelfAssigned: false,
+        modifiedNotes: 'AI Recommended for Software Development Cell',
+      },
+    },
+    {
+      subProblemId: 'SP-GOVT-03',
+      title: `Administrative Ground Truth Survey, Materials Procurement & Policy Sanction`,
+      track: 'GOVERNMENT_INFRASTRUCTURE',
+      assignedRole: 'government',
+      targetHEI: `${district || 'District'} Administration & Local PRI`,
+      targetDepartment: 'District Collector Planning Division',
+      scopeDescription: `Conduct ground verification with local Mukhiya, approve field budget expenditure, clear regulatory permits, and oversee public deployment.`,
+      deliverable: 'Administrative Work Sanction Order + Field Inspection Certificate',
+      requiredSkills: ['Civil Inspection', 'Budget Allocation', 'Inter-Agency Coordination'],
+      estimatedTimeframe: '4-6 Weeks',
+      status: 'PROPOSED',
+      assignedTo: {
+        userName: 'Pooja Singhal, IAS',
+        userEmail: 'dc.gumla@jharkhand.gov.in',
+        organizationName: `${district || 'District'} Administration`,
+        assignedAt: new Date(),
+        isSelfAssigned: false,
+        modifiedNotes: 'AI Assigned to District Administrative Division',
+      },
+    },
+  ];
+};
+
+/**
  * Main Triage Function
  * 1. Tries to call FastAPI microservice (FASTAPI_AI_URL, e.g. http://localhost:8000/api/triage or /triage)
  * 2. If FastAPI is not responding, seamlessly falls back to semantic rule engine.
@@ -190,6 +504,7 @@ const fallbackTriageEngine = (title = '', description = '', category = '', distr
 const analyzeProblem = async ({ title, description, category, district }) => {
   const fastApiUrl = process.env.FASTAPI_AI_URL || 'http://localhost:8000';
   const endpoint = `${fastApiUrl.replace(/\/+$/, '')}/api/triage`;
+  const subProblems = generateDecomposedSubProblems({ title, description, category, district });
 
   try {
     const controller = new AbortController();
@@ -209,7 +524,10 @@ const analyzeProblem = async ({ title, description, category, district }) => {
       console.log('[AI Triage] Successfully received prediction from FastAPI microservice');
       return {
         source: 'fastapi_microservice',
-        data,
+        data: {
+          ...data,
+          decomposedSubProblems: data.decomposedSubProblems || subProblems,
+        },
       };
     } else {
       console.warn(`[AI Triage] FastAPI returned HTTP ${response.status}. Using fallback triage engine.`);
@@ -221,6 +539,7 @@ const analyzeProblem = async ({ title, description, category, district }) => {
 
   // Fallback engine
   const fallbackResult = fallbackTriageEngine(title, description, category, district);
+  fallbackResult.decomposedSubProblems = subProblems;
   return {
     source: 'built_in_triage_engine',
     data: fallbackResult,
@@ -230,4 +549,5 @@ const analyzeProblem = async ({ title, description, category, district }) => {
 module.exports = {
   analyzeProblem,
   fallbackTriageEngine,
+  generateDecomposedSubProblems,
 };

@@ -495,9 +495,9 @@ function SubmitProblem() {
                     <Sparkles size={18} />
                   </div>
                   <div>
-                    <h3 className="ai-card-title">AI Problem Triage & University-Industry Matcher</h3>
+                    <h3 className="ai-card-title">AI Problem Decomposition & Routing Engine</h3>
                     <p className="ai-card-subtitle">
-                      Automated semantic classification via Python FastAPI microservice & capability matrix
+                      Breaks problem into specialized HEI, Government & Software tracks dispatched with full statement
                     </p>
                   </div>
                 </div>
@@ -593,6 +593,61 @@ function SubmitProblem() {
                 </div>
               )}
 
+              {/* AI Multi-Track Problem Decomposition Preview */}
+              <div className="ai-decomposition-preview">
+                <div className="decomposition-preview-header">
+                  <div className="preview-header-left">
+                    <Layers size={17} color="#4f46e5" />
+                    <strong>Automatic 3-Track Problem Decomposition</strong>
+                  </div>
+                  <span className="dispatch-badge">Full Statement Dispatched to All Tracks</span>
+                </div>
+                <p className="preview-note">
+                  Instead of a generic ticket, the AI divides this problem into 3 operational modules routed to specific Jharkhand institutions. Institutions can re-assign or modify their assigned modules on the problem dashboard.
+                </p>
+
+                <div className="preview-tracks-grid">
+                  {/* Track 1: HEI Research */}
+                  <div className="preview-track-item track-hei">
+                    <div className="track-item-header">
+                      <GraduationCap size={15} />
+                      <span>HEI Academic R&D Track</span>
+                    </div>
+                    <strong>{aiInsights.recommendedUniversity?.name || "Birsa Agricultural University (BAU)"}</strong>
+                    <span className="track-dept">{aiInsights.recommendedUniversity?.department || "Dept of Hydrology & Chemical Engineering"}</span>
+                    <p className="track-scope">
+                      {aiInsights.decomposedSubProblems?.[0]?.scopeDescription || "Lab testing, chemical/mechanical filtration design, and TRL-3 working prototype fabrication."}
+                    </p>
+                  </div>
+
+                  {/* Track 2: Software / Telemetry */}
+                  <div className="preview-track-item track-tech">
+                    <div className="track-item-header">
+                      <Cpu size={15} />
+                      <span>Software & IoT Telemetry Track</span>
+                    </div>
+                    <strong>IIT (ISM) Dhanbad / BIT Mesra</strong>
+                    <span className="track-dept">Dept of Electronics & Computer Science</span>
+                    <p className="track-scope">
+                      {aiInsights.decomposedSubProblems?.[1]?.scopeDescription || "Off-grid telemetry box, sensor data streaming, citizen mobile alerts & GIS mapping."}
+                    </p>
+                  </div>
+
+                  {/* Track 3: Government Infrastructure */}
+                  <div className="preview-track-item track-govt">
+                    <div className="track-item-header">
+                      <Building2 size={15} />
+                      <span>Government & Civil Track</span>
+                    </div>
+                    <strong>{formData.district || "District"} Line Department</strong>
+                    <span className="track-dept">Panchayati Raj Civil Engineering Wing</span>
+                    <p className="track-scope">
+                      {aiInsights.decomposedSubProblems?.[2]?.scopeDescription || "Site pressure testing, pipeline excavation, concrete foundation & administrative tenders."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Apply Suggestions Action */}
               <div className="ai-card-footer">
                 <button
@@ -603,17 +658,17 @@ function SubmitProblem() {
                   {appliedAi ? (
                     <>
                       <Check size={16} />
-                      AI Suggestions Applied to Form!
+                      Form Meta Synced!
                     </>
                   ) : (
                     <>
                       <Sparkles size={16} />
-                      Auto-Fill Form with AI Recommendations
+                      Sync Category & Priority to Form
                     </>
                   )}
                 </button>
                 <span className="ai-footer-note">
-                  Auto-syncs Category ({formData.category || "Pending"}), Priority ({formData.priority || "Pending"}), and District routing
+                  Dispatches full problem statement + modular breakdown to HEI, Government & Software tracks upon submission
                 </span>
               </div>
             </div>

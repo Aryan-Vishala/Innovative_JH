@@ -30,6 +30,7 @@ import { problemApi, priApi, getCurrentUser } from "../../services/api";
 import ProblemStatusBadge from "../../components/problems/ProblemStatusBadge";
 import TrlProgressTracker from "../../components/problems/TrlProgressTracker";
 import QuadHelixActionBar from "../../components/problems/QuadHelixActionBar";
+import AiSubProblemBreakdown from "../../components/problems/AiSubProblemBreakdown";
 import "./ProblemDetails.css";
 
 // Fallback seed problems for instant pitch demo resilience
@@ -568,6 +569,18 @@ function ProblemDetails() {
       <TrlProgressTracker
         currentLevel={currentLevel}
         solutionInfo={problem.solution}
+      />
+
+      {/* =========================================================================
+          🧠 5. AI PROBLEM DECOMPOSITION & HEI / GOVT / SOFTWARE MULTI-TRACK ROUTING
+      ========================================================================= */}
+      <AiSubProblemBreakdown
+        problem={problem}
+        onProblemUpdated={(updated) => {
+          setProblem(updated);
+          setActionSuccess("Sub-problem scope & assignment updated successfully!");
+          setTimeout(() => setActionSuccess(""), 4500);
+        }}
       />
 
       <div className="details-layout">
